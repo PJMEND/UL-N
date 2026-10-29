@@ -3583,7 +3583,7 @@ kbd { border: 1px solid var(--linha); border-bottom-width: 2px; border-radius: 4
       "<li>Escolha <b>Barra</b> e clique no início e no fim de cada barra; o desenho continua a partir do último ponto, até carregar em <kbd>Esc</kbd> ou no botão direito. Um ponto sobre uma barra que já existe liga-se a ela.</li>" +
       "<li>Os pontos acertam pelos nós e pela grelha. O botão <b>Ajustar</b> (tecla <kbd>G</kbd>) liga e desliga a grelha; sem ela, acertam ao centímetro. Para valores exatos, faça duplo clique num nó ou numa barra e escreva as coordenadas.</li>" +
       "<li>Em <b>Estrutura</b>, escolha <b>Treliça</b> para ter todos os nós articulados, com as cargas e os apoios nos nós.</li>" +
-      "<li>Apoios, rótulas, forças e momentos põem-se com um clique num nó ou num ponto de uma barra; uma carga distribuída, arrastando ao longo de uma barra (ou com um clique, para a barra toda).</li>" +
+      "<li>Apoios, rótulas, forças e momentos põem-se com um clique num nó ou num ponto de uma barra; uma carga distribuída, arrastando ao longo de uma barra (ou com um clique, para a barra toda). As cargas escrevem-se sem sinal, com o sentido à parte; as distribuídas são por metro de barra.</li>" +
       "<li>Com <b>Selecionar</b>, arraste nós e elementos; duplo clique edita; o botão direito ou <kbd>Delete</kbd> apaga; as setas deslocam o que estiver selecionado. Apagar o nó entre duas barras alinhadas junta-as numa só.</li>" +
       "<li>Arraste o fundo para deslocar o desenho e use a roda do rato para ampliar; <b>Enquadrar</b> (tecla <kbd>F</kbd>) volta a ajustá-lo à janela.</li>" +
       "<li><kbd>Ctrl</kbd>+<kbd>Z</kbd> desfaz e <kbd>Ctrl</kbd>+<kbd>Y</kbd> refaz (<kbd>⌘</kbd> no Mac). A última estrutura fica guardada neste browser; <b>Guardar</b> cria um ficheiro para a abrir noutro computador.</li></ul>" +
@@ -3591,20 +3591,11 @@ kbd { border: 1px solid var(--linha); border-bottom-width: 2px; border-radius: 4
       "<li>Os botões por cima do desenho mostram a estrutura com as cargas e as reações, ou um dos diagramas de <b>N</b>, <b>V</b> e <b>M</b> desenhado sobre as barras. Numa treliça, o diagrama de N é a cor de cada barra.</li>" +
       "<li>Passe o rato sobre uma barra para ler os esforços; clique para fixar a secção. No painel, os quadros dão os valores nos pontos notáveis de cada barra.</li></ul>" +
       "<h3>Duas convenções de sinais</h3>" +
-      "<p>Os números deste programa usam duas convenções diferentes, e cada quadro diz qual é a sua.</p>" +
-      '<p><span class="conv equilibrio">→ + &nbsp;↑ + &nbsp;↺ +</span> <b>Equações de equilíbrio</b>: reações e verificação do equilíbrio.</p><ul>' +
-      "<li>Positivo para a direita, para cima e no sentido anti-horário.</li>" +
-      "<li>Um valor negativo quer dizer que a reação tem o sentido contrário. No desenho, as setas mostram o sentido real e o valor vem sem sinal.</li></ul>" +
-      '<p><span class="conv seccao">convenção da secção</span> <b>Esforços</b>: diagramas de N, V e M e quadros de esforços.</p>' +
-      '<div class="convencao">' + figuraConvencao() + "</div><ul>" +
-      "<li>Cada barra tem um eixo s, que parte do nó da esquerda (ou do de baixo, numa barra vertical). «À esquerda da secção» é o lado desse nó.</li>" +
-      "<li><b>N</b> positivo de tração; <b>V</b> positivo quando a resultante das forças à esquerda da secção aponta para cima (para o lado +y local, rodado 90° a partir do eixo da barra); <b>M</b> positivo quando traciona a fibra inferior, que nas barras inclinadas e verticais vem marcada a tracejado.</li>" +
-      "<li>O diagrama de M desenha-se do lado das fibras tracionadas.</li></ul>" +
-      "<p>As duas convenções são independentes, e o sinal de uma reação não dá o sinal do esforço junto ao apoio:</p><ul>" +
-      "<li>numa consola encastrada à esquerda, com a carga para baixo, a reação M<sub>A</sub> é positiva (↺) e o momento fletor em A é negativo; encastrada à direita, são ambos negativos;</li>" +
-      "<li>numa viga simplesmente apoiada, a reação vertical no apoio da direita é positiva (↑) e o esforço transverso junto a ele é negativo;</li>" +
-      "<li>num apoio fixo à esquerda, uma reação horizontal positiva (→) empurra a viga, e o esforço axial junto a ele é de compressão (negativo).</li></ul>" +
-      "<p>As cargas não levam sinal: forças, momentos e cargas distribuídas escrevem-se com a intensidade, e o sentido escolhe-se à parte. Uma carga distribuída é por metro de barra.</p>" +
+      '<p><span class="conv equilibrio">→ + &nbsp;↑ + &nbsp;↺ +</span> Reações e verificação do equilíbrio. No desenho, as setas dão o sentido real.</p>' +
+      '<p><span class="conv seccao">convenção da secção</span> Diagramas e quadros de N, V e M.</p>' +
+      '<div class="convencao">' + figuraConvencao() + "</div>" +
+      "<p>N positivo de tração, V positivo com a resultante à esquerda para cima, M positivo a tracionar a fibra inferior (a tracejado nas barras inclinadas e verticais). A esquerda é o lado do nó onde começa s.</p>" +
+      "<p>Os sinais não se comparam entre as duas: numa consola encastrada à esquerda, M<sub>A</sub> é positivo e o momento fletor em A é negativo.</p>" +
       "<h3>Classificação</h3><ul>" +
       "<li>Vigas e pórticos: g = r − 3 − e, com r reações e e rótulas (uma rótula que liga k barras conta k − 1); cada contorno fechado de barras rígidas soma 3.</li>" +
       "<li>Treliças: g = b + r − 2n, com b barras, r reações e n nós.</li>" +
@@ -3675,8 +3666,8 @@ kbd { border: 1px solid var(--linha); border-bottom-width: 2px; border-radius: 4
         if (lig.length === 1) {
           var b = res.barra(lig[0]), noI = est.idx.barra[lig[0]].i === R.no;
           var Mf = b.esforcos(noI ? 0 : b.L, noI ? "dir" : "esq").M;
-          enc.push(" Em " + esc(R.nome) + ", a reação " + nomeHtml("M", R.nome) + " vale " + fmt(R.M) + " kN·m e o momento fletor na barra " +
-            esc(b.nome) + " junto a " + esc(R.nome) + " vale " + fmt(Mf) + " kN·m: o mesmo valor, com o sinal de cada convenção.");
+          enc.push(" Em " + esc(R.nome) + ": " + nomeHtml("M", R.nome) + " = " + fmt(R.M) + " kN·m; momento fletor na barra " +
+            esc(b.nome) + " = " + fmt(Mf) + " kN·m.");
         }
       }
       var nome = R.nome;
@@ -3696,8 +3687,7 @@ kbd { border: 1px solid var(--linha); border-bottom-width: 2px; border-radius: 4
         if (R.tipo === "encastramento") s += linhaR(nomeHtml("M", nome), R.M, "M", "kN·m");
       }
     });
-    return s + '<p class="nota">Sinais das equações de equilíbrio: → +, ↑ +, ↺ +; a seta indica o sentido real. ' +
-      "N, V e M seguem a convenção da secção, e os sinais não se comparam com estes." + enc.join("") + "</p></div>";
+    return s + '<p class="nota">A seta dá o sentido real. Os sinais não se comparam com os de N, V e M.' + enc.join("") + "</p></div>";
   }
 
   function htmlEquilibrio(res) {
@@ -3796,8 +3786,7 @@ kbd { border: 1px solid var(--linha); border-bottom-width: 2px; border-radius: 4
     else bs.forEach(function (b) {
       s += '<details class="barra-quadro" open><summary>Barra ' + esc(b.nome) + " · " + fmt(b.L) + " m · " + descreverBarra(b) + "</summary>" + htmlQuadroBarra(b) + "</details>";
     });
-    return s + '<p class="nota">s mede-se ao longo de cada barra, a partir do primeiro nó do nome. Sentidos positivos: N de tração; V com a resultante das forças à esquerda da secção para cima; M a tracionar a fibra inferior. ' +
-      "Onde há uma força ou um momento concentrado, os valores vêm à esquerda (esq.) e à direita (dir.) da secção.</p></div>";
+    return s + '<p class="nota">s a partir do primeiro nó do nome da barra. Numa carga concentrada, valores à esquerda (esq.) e à direita (dir.).</p></div>';
   }
 
   function htmlBarrasTrelica(res) {
@@ -3808,7 +3797,7 @@ kbd { border: 1px solid var(--linha); border-bottom-width: 2px; border-radius: 4
       var cor = Math.abs(b.N) < 0.005 ? COR.cinza : b.N > 0 ? COR.tracao : COR.compressao;
       s += "<tr><td><b>" + esc(b.nome) + "</b></td><td>" + fmt(b.L) + "</td><td>" + fmt(b.N) + '</td><td style="text-align:left;color:' + cor + '">' + nat + "</td></tr>";
     });
-    return s + '</table><p class="nota">N positivo de tração e negativo de compressão. As barras de uma treliça só têm esforço axial.</p></div>';
+    return s + '</table><p class="nota">N positivo de tração.</p></div>';
   }
 
   function painelResultados() {
