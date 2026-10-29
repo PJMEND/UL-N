@@ -1,0 +1,2853 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagramas de Esforços · Estática</title>
+<style>
+:root {
+  --azul: #12344F;
+  --azul-medio: #2E5574;
+  --azul-claro: #E6EDF3;
+  --dourado: #FCC000;
+  --carga: #C62828;
+  --reacao: #1E7B34;
+  --tracao: #C62828;
+  --compressao: #2E6DA4;
+  --texto: #1F2933;
+  --texto-2: #52606D;
+  --linha: #D5DCE3;
+  --fundo: #F4F6F8;
+  --branco: #FFFFFF;
+  --verde-fundo: #E6F4EA;
+  --ambar-fundo: #FFF6DA;
+  --vermelho-fundo: #FDECEC;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  color: var(--texto);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { display: flex; flex-direction: column; background: var(--fundo); font-size: 14px; }
+button, input, select { font: inherit; color: inherit; }
+
+/* ---- cabeçalho */
+.topo {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--azul); color: #fff; padding: 8px 16px; gap: 12px;
+}
+.marca { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brasao {
+  width: 42px; height: 42px; border-radius: 50%; background: #fff; flex: none;
+  display: flex; align-items: center; justify-content: center;
+}
+.brasao img { width: 38px; height: 38px; }
+.titulo { font-size: 19px; font-weight: 700; letter-spacing: 0.2px; }
+.subtitulo { font-size: 12px; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.botao-topo {
+  background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 6px; padding: 6px 12px; cursor: pointer; white-space: nowrap;
+}
+.botao-topo:hover { background: rgba(255,255,255,0.12); }
+
+/* ---- barra de ferramentas */
+.barra {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
+  background: var(--branco); border-bottom: 1px solid var(--linha); padding: 6px 12px;
+}
+.grupo { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.ferramenta {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 62px; height: 54px; padding: 3px 2px; border: 1px solid transparent; border-radius: 7px;
+  background: transparent; cursor: pointer; font-size: 11px; color: var(--texto-2); gap: 2px;
+}
+.ferramenta svg { width: 30px; height: 26px; }
+.ferramenta:hover { background: var(--azul-claro); }
+.ferramenta.ativa { background: var(--azul); color: #fff; border-color: var(--azul); }
+.ferramenta.ativa svg * { stroke: #fff; }
+.ferramenta.ativa svg .cheio { fill: #fff; }
+.campos label { display: flex; flex-direction: column; font-size: 11px; color: var(--texto-2); gap: 2px; margin-right: 6px; }
+.campos label.caixa { flex-direction: row; align-items: center; gap: 6px; font-size: 13px; color: var(--texto); }
+.entrada { display: flex; align-items: center; gap: 4px; color: var(--texto); font-size: 13px; }
+.campos input[type=text], .campos select {
+  border: 1px solid var(--linha); border-radius: 5px; padding: 4px 6px; background: #fff; font-size: 13px;
+}
+.campos input[type=text] { width: 72px; text-align: right; }
+.acao {
+  border: 1px solid var(--linha); background: #fff; border-radius: 6px; padding: 6px 10px;
+  cursor: pointer; font-size: 13px; white-space: nowrap;
+}
+.acao:hover { background: var(--azul-claro); }
+.acao.icone { font-size: 17px; line-height: 1; padding: 4px 9px; }
+.acao:disabled { opacity: 0.45; cursor: default; background: #fff; }
+.menu { position: relative; }
+.lista-menu {
+  position: absolute; top: 100%; left: 0; z-index: 20; margin-top: 4px; min-width: 290px;
+  background: #fff; border: 1px solid var(--linha); border-radius: 8px; box-shadow: 0 8px 24px rgba(18,52,79,0.18);
+  padding: 4px;
+}
+.lista-menu button {
+  display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 8px 10px;
+  border-radius: 5px; cursor: pointer;
+}
+.lista-menu button:hover { background: var(--azul-claro); }
+.lista-menu small { display: block; color: var(--texto-2); font-size: 11.5px; }
+
+/* ---- corpo */
+.corpo { flex: 1; display: flex; min-height: 0; }
+.coluna-desenho { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.area-desenho { flex: 1; overflow: auto; background: #fff; min-height: 0; touch-action: none; }
+.area-desenho svg { display: block; user-select: none; -webkit-user-select: none; }
+.estado {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  border-top: 1px solid var(--linha); background: #fff; padding: 6px 12px; font-size: 13px;
+  color: var(--texto-2); min-height: 32px; font-variant-numeric: tabular-nums;
+}
+.estado b { color: var(--texto); }
+.caixa-estado { display: flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--texto); cursor: pointer; }
+.painel {
+  width: 400px; flex: none; border-left: 1px solid var(--linha); background: var(--fundo);
+  display: flex; flex-direction: column; min-height: 0;
+}
+.separadores { display: flex; background: #fff; border-bottom: 1px solid var(--linha); }
+.separador {
+  flex: 1; border: 0; background: transparent; padding: 10px; cursor: pointer; font-weight: 600;
+  color: var(--texto-2); border-bottom: 3px solid transparent;
+}
+.separador.ativo { color: var(--azul); border-bottom-color: var(--dourado); }
+.conteudo-sep { flex: 1; overflow: auto; padding: 10px; }
+
+.cartao {
+  background: #fff; border: 1px solid var(--linha); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;
+}
+.cartao h3 {
+  margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--azul);
+  display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+/* a convenção de sinais de cada quadro */
+.conv {
+  text-transform: none; letter-spacing: 0; font-size: 11px; font-weight: 600; white-space: nowrap;
+  padding: 1px 8px; border-radius: 9px; border: 1px solid; cursor: help;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.conv.equilibrio { background: var(--verde-fundo); color: var(--reacao); border-color: #B5DCC0; }
+.conv.seccao { background: #E3EBF3; color: var(--azul); border-color: #BFCEDC; }
+.cartao .nota { font-size: 12px; color: var(--texto-2); margin: 6px 0 0; }
+.classe { border-left: 5px solid; }
+.classe.isostatica { border-left-color: var(--reacao); background: var(--verde-fundo); }
+.classe.hiperestatica { border-left-color: #C98A00; background: var(--ambar-fundo); }
+.classe.hipostatica, .classe.erro { border-left-color: var(--carga); background: var(--vermelho-fundo); }
+.classe .veredicto { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.classe .contagem { font-variant-numeric: tabular-nums; }
+.classe ul { margin: 4px 0 0 18px; padding: 0; }
+
+table.quadro { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13px; }
+.quadro th { text-align: right; font-size: 11.5px; color: var(--texto-2); font-weight: 600; border-bottom: 1px solid var(--linha); padding: 3px 4px; }
+.quadro td { text-align: right; padding: 3px 4px; border-bottom: 1px solid #EEF1F4; white-space: nowrap; }
+.quadro th:first-child, .quadro td:first-child { text-align: left; }
+.quadro td.ponto { text-align: left; color: var(--texto-2); font-size: 12px; white-space: normal; }
+.quadro tr.especial td { background: #FFF9E3; }
+.quadro tr.especial td.ponto { color: #8A6100; font-weight: 600; }
+.quadro tr.salto-dir td { border-bottom: 1px solid var(--linha); }
+.quadro .lado { color: var(--texto-2); font-size: 11px; }
+
+.reacao { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; font-variant-numeric: tabular-nums; }
+.reacao .val { font-weight: 600; }
+.reacao .seta { display: inline-block; width: 18px; text-align: center; color: var(--reacao); font-weight: 700; }
+.apoio-cab { font-weight: 700; color: var(--azul); margin-top: 6px; }
+.apoio-cab:first-of-type { margin-top: 0; }
+.apoio-cab span { font-weight: 400; color: var(--texto-2); font-size: 12px; }
+.verif { display: flex; gap: 12px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.verif span.ok { color: var(--reacao); font-weight: 700; }
+.linha-max { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; font-variant-numeric: tabular-nums; }
+.linha-max span:last-child { color: var(--texto-2); }
+.seccao-entrada { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.seccao-entrada input { width: 80px; text-align: right; border: 1px solid var(--linha); border-radius: 5px; padding: 4px 6px; }
+
+/* ---- elementos */
+.grupo-el { margin-bottom: 10px; }
+.grupo-el .cab { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.grupo-el .cab h3 { margin: 0; }
+.mais { border: 1px solid var(--linha); background: #fff; border-radius: 5px; padding: 2px 8px; cursor: pointer; font-size: 12px; }
+.mais:hover { background: var(--azul-claro); }
+.item {
+  display: flex; align-items: center; gap: 6px; padding: 5px 6px; border-radius: 6px; cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.item:hover { background: var(--azul-claro); }
+.item.sel { background: #FFF3C4; }
+.item .desc { flex: 1; min-width: 0; }
+.item .desc small { display: block; color: var(--texto-2); font-size: 11.5px; }
+.item button { border: 0; background: transparent; cursor: pointer; padding: 2px 5px; border-radius: 4px; color: var(--texto-2); }
+.item button:hover { background: #fff; color: var(--texto); }
+.vazio { color: var(--texto-2); font-size: 12.5px; padding: 2px 6px; }
+
+/* ---- diálogos */
+.fundo-dialogo {
+  position: fixed; inset: 0; background: rgba(18,52,79,0.35); z-index: 50;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.fundo-dialogo[hidden] { display: none; }
+.dialogo {
+  background: #fff; border-radius: 10px; box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+  width: 100%; max-width: 440px; max-height: calc(100vh - 32px); overflow: auto; padding: 16px 18px;
+}
+.dialogo.largo { max-width: 680px; }
+.dialogo h2 { margin: 0 0 12px; font-size: 17px; color: var(--azul); }
+.dialogo h3 { font-size: 14px; color: var(--azul); margin: 16px 0 6px; }
+.dialogo p, .dialogo li { line-height: 1.45; }
+.dialogo ul { padding-left: 20px; }
+.form { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center; }
+.form label { font-size: 13px; color: var(--texto-2); }
+.form .campo { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.form input[type=text], .form select {
+  border: 1px solid var(--linha); border-radius: 5px; padding: 5px 7px; font-size: 14px; background: #fff;
+}
+.form input[type=text] { width: 96px; text-align: right; }
+.form .unidade { color: var(--texto-2); font-size: 13px; }
+.opcoes { display: flex; gap: 4px; flex-wrap: wrap; }
+.opcoes button {
+  border: 1px solid var(--linha); background: #fff; border-radius: 5px; padding: 4px 9px; cursor: pointer; font-size: 13px;
+}
+.opcoes button.ativa { background: var(--azul); color: #fff; border-color: var(--azul); }
+.opcoes button:disabled { opacity: 0.4; cursor: default; }
+.previa { display: flex; gap: 12px; align-items: center; margin-top: 12px; padding: 8px; background: var(--fundo); border-radius: 8px; }
+.previa svg { flex: none; background: #fff; border-radius: 6px; border: 1px solid var(--linha); }
+.previa .info { font-size: 13px; font-variant-numeric: tabular-nums; line-height: 1.5; }
+.erro-form { color: var(--carga); font-size: 13px; margin-top: 10px; min-height: 1em; }
+.botoes { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.botoes button { border-radius: 6px; padding: 7px 16px; cursor: pointer; border: 1px solid var(--linha); background: #fff; }
+.botoes .principal { background: var(--azul); color: #fff; border-color: var(--azul); }
+.convencao { display: flex; justify-content: center; margin: 6px 0 10px; }
+.convencao.pequena { justify-content: flex-start; margin: 2px 0 6px; }
+kbd { border: 1px solid var(--linha); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; font-size: 12px; background: var(--fundo); }
+
+/* ---- ecrãs estreitos */
+@media (max-width: 1050px) {
+  .corpo { flex-direction: column; }
+  .painel { width: auto; border-left: 0; border-top: 1px solid var(--linha); }
+  .area-desenho { min-height: 560px; }
+  .subtitulo { display: none; }
+}
+
+/* ---- impressão */
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+  body { background: #fff; display: block; }
+  .barra, .botao-topo, .separadores, .estado, .mais, .item button, .seccao-entrada { display: none !important; }
+  .topo { background: #fff; color: var(--azul); border-bottom: 2px solid var(--azul); padding: 0 0 6px; }
+  .corpo { display: block; }
+  .area-desenho { overflow: visible; }
+  .area-desenho svg { width: 100%; height: auto; }
+  .painel { width: auto; border: 0; display: block; }
+  .conteudo-sep { overflow: visible; padding: 0; }
+  #sep-elementos[hidden], #sep-resultados[hidden] { display: block !important; }
+  .conteudo-sep { columns: 2; column-gap: 16px; }
+  .cartao, .grupo-el { break-inside: avoid; }
+  .cartao-seccao.sem-valor { display: none; }
+}
+
+</style>
+</head>
+<body>
+<header class="topo">
+  <div class="marca">
+    <span class="brasao"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAKMWlDQ1BJQ0MgUHJvZmlsZQAAeJydlndUU9kWh8+9N71QkhCKlNBraFICSA29SJEuKjEJEErAkAAiNkRUcERRkaYIMijggKNDkbEiioUBUbHrBBlE1HFwFBuWSWStGd+8ee/Nm98f935rn73P3Wfvfda6AJD8gwXCTFgJgAyhWBTh58WIjYtnYAcBDPAAA2wA4HCzs0IW+EYCmQJ82IxsmRP4F726DiD5+yrTP4zBAP+flLlZIjEAUJiM5/L42VwZF8k4PVecJbdPyZi2NE3OMErOIlmCMlaTc/IsW3z2mWUPOfMyhDwZy3PO4mXw5Nwn4405Er6MkWAZF+cI+LkyviZjg3RJhkDGb+SxGXxONgAoktwu5nNTZGwtY5IoMoIt43kA4EjJX/DSL1jMzxPLD8XOzFouEiSniBkmXFOGjZMTi+HPz03ni8XMMA43jSPiMdiZGVkc4XIAZs/8WRR5bRmyIjvYODk4MG0tbb4o1H9d/JuS93aWXoR/7hlEH/jD9ld+mQ0AsKZltdn6h21pFQBd6wFQu/2HzWAvAIqyvnUOfXEeunxeUsTiLGcrq9zcXEsBn2spL+jv+p8Of0NffM9Svt3v5WF485M4knQxQ143bmZ6pkTEyM7icPkM5p+H+B8H/nUeFhH8JL6IL5RFRMumTCBMlrVbyBOIBZlChkD4n5r4D8P+pNm5lona+BHQllgCpSEaQH4eACgqESAJe2Qr0O99C8ZHA/nNi9GZmJ37z4L+fVe4TP7IFiR/jmNHRDK4ElHO7Jr8WgI0IABFQAPqQBvoAxPABLbAEbgAD+ADAkEoiARxYDHgghSQAUQgFxSAtaAYlIKtYCeoBnWgETSDNnAYdIFj4DQ4By6By2AE3AFSMA6egCnwCsxAEISFyBAVUod0IEPIHLKFWJAb5AMFQxFQHJQIJUNCSAIVQOugUqgcqobqoWboW+godBq6AA1Dt6BRaBL6FXoHIzAJpsFasBFsBbNgTzgIjoQXwcnwMjgfLoK3wJVwA3wQ7oRPw5fgEVgKP4GnEYAQETqiizARFsJGQpF4JAkRIauQEqQCaUDakB6kH7mKSJGnyFsUBkVFMVBMlAvKHxWF4qKWoVahNqOqUQdQnag+1FXUKGoK9RFNRmuizdHO6AB0LDoZnYsuRlegm9Ad6LPoEfQ4+hUGg6FjjDGOGH9MHCYVswKzGbMb0445hRnGjGGmsVisOtYc64oNxXKwYmwxtgp7EHsSewU7jn2DI+J0cLY4X1w8TogrxFXgWnAncFdwE7gZvBLeEO+MD8Xz8MvxZfhGfA9+CD+OnyEoE4wJroRIQiphLaGS0EY4S7hLeEEkEvWITsRwooC4hlhJPEQ8TxwlviVRSGYkNimBJCFtIe0nnSLdIr0gk8lGZA9yPFlM3kJuJp8h3ye/UaAqWCoEKPAUVivUKHQqXFF4pohXNFT0VFysmK9YoXhEcUjxqRJeyUiJrcRRWqVUo3RU6YbStDJV2UY5VDlDebNyi/IF5UcULMWI4kPhUYoo+yhnKGNUhKpPZVO51HXURupZ6jgNQzOmBdBSaaW0b2iDtCkVioqdSrRKnkqNynEVKR2hG9ED6On0Mvph+nX6O1UtVU9Vvuom1TbVK6qv1eaoeajx1UrU2tVG1N6pM9R91NPUt6l3qd/TQGmYaYRr5Grs0Tir8XQObY7LHO6ckjmH59zWhDXNNCM0V2ju0xzQnNbS1vLTytKq0jqj9VSbru2hnaq9Q/uE9qQOVcdNR6CzQ+ekzmOGCsOTkc6oZPQxpnQ1df11Jbr1uoO6M3rGelF6hXrtevf0Cfos/ST9Hfq9+lMGOgYhBgUGrQa3DfGGLMMUw12G/YavjYyNYow2GHUZPTJWMw4wzjduNb5rQjZxN1lm0mByzRRjyjJNM91tetkMNrM3SzGrMRsyh80dzAXmu82HLdAWThZCiwaLG0wS05OZw2xljlrSLYMtCy27LJ9ZGVjFW22z6rf6aG1vnW7daH3HhmITaFNo02Pzq62ZLde2xvbaXPJc37mr53bPfW5nbse322N3055qH2K/wb7X/oODo4PIoc1h0tHAMdGx1vEGi8YKY21mnXdCO3k5rXY65vTW2cFZ7HzY+RcXpkuaS4vLo3nG8/jzGueNueq5clzrXaVuDLdEt71uUnddd457g/sDD30PnkeTx4SnqWeq50HPZ17WXiKvDq/XbGf2SvYpb8Tbz7vEe9CH4hPlU+1z31fPN9m31XfKz95vhd8pf7R/kP82/xsBWgHcgOaAqUDHwJWBfUGkoAVB1UEPgs2CRcE9IXBIYMj2kLvzDecL53eFgtCA0O2h98KMw5aFfR+OCQ8Lrwl/GGETURDRv4C6YMmClgWvIr0iyyLvRJlESaJ6oxWjE6Kbo1/HeMeUx0hjrWJXxl6K04gTxHXHY+Oj45vipxf6LNy5cDzBPqE44foi40V5iy4s1licvvj4EsUlnCVHEtGJMYktie85oZwGzvTSgKW1S6e4bO4u7hOeB28Hb5Lvyi/nTyS5JpUnPUp2Td6ePJninlKR8lTAFlQLnqf6p9alvk4LTduf9ik9Jr09A5eRmHFUSBGmCfsytTPzMoezzLOKs6TLnJftXDYlChI1ZUPZi7K7xTTZz9SAxESyXjKa45ZTk/MmNzr3SJ5ynjBvYLnZ8k3LJ/J9879egVrBXdFboFuwtmB0pefK+lXQqqWrelfrry5aPb7Gb82BtYS1aWt/KLQuLC98uS5mXU+RVtGaorH1futbixWKRcU3NrhsqNuI2ijYOLhp7qaqTR9LeCUXS61LK0rfb+ZuvviVzVeVX33akrRlsMyhbM9WzFbh1uvb3LcdKFcuzy8f2x6yvXMHY0fJjpc7l+y8UGFXUbeLsEuyS1oZXNldZVC1tep9dUr1SI1XTXutZu2m2te7ebuv7PHY01anVVda926vYO/Ner/6zgajhop9mH05+x42Rjf2f836urlJo6m06cN+4X7pgYgDfc2Ozc0tmi1lrXCrpHXyYMLBy994f9Pdxmyrb6e3lx4ChySHHn+b+O31w0GHe4+wjrR9Z/hdbQe1o6QT6lzeOdWV0iXtjusePhp4tLfHpafje8vv9x/TPVZzXOV42QnCiaITn07mn5w+lXXq6enk02O9S3rvnIk9c60vvG/wbNDZ8+d8z53p9+w/ed71/LELzheOXmRd7LrkcKlzwH6g4wf7HzoGHQY7hxyHui87Xe4Znjd84or7ldNXva+euxZw7dLI/JHh61HXb95IuCG9ybv56Fb6ree3c27P3FlzF3235J7SvYr7mvcbfjT9sV3qID0+6j068GDBgztj3LEnP2X/9H686CH5YcWEzkTzI9tHxyZ9Jy8/Xvh4/EnWk5mnxT8r/1z7zOTZd794/DIwFTs1/lz0/NOvm1+ov9j/0u5l73TY9P1XGa9mXpe8UX9z4C3rbf+7mHcTM7nvse8rP5h+6PkY9PHup4xPn34D94Tz+6TMXDkAAEShSURBVHja3b13fBzVuf//fs7M7K5WkqVdSS64gI1pxhiDJNsQQHZoplm2QaSXe5MAN8kNyb03CYEkQmmkh5Sbm3LTQxIQ4AoYSDAKBIMtUQyYZrq7Ja3qtpk5z++PWcmyMS3flO/3N6/XviSNZmbnnOc87fOUI/yzj5YWB4D29vAV5/c/J4CmG5d9zEevG9y0snfs5VUNy6c7Gn4XkQpEb1bEs+qv7O+85TlQAdFXfnmrgTYA+88avvwTv3O/CUk1NE+16FGu4wU4flfPfasHRya9NFF22innpYYKsefVhldkulb/aAyRBNBUQ/MGQRbkxZsU12KTIN/H8O7ejSvvAIRZLV66IjgxzAe7+zevef5A4v4zCGD+oRMfrXYdGWyqvqUq1dj8wZp5F96I8g4HM81a+yMNvcfS9RecWbrO0LJFAIby3iIRqRIjn0zPWzyO9naNVjdKU5MLeiiqj2c3te/KdK66HtWX1ervJsw5sxyALbMCQo50ErEtqYal303PW3ZRbePSI/9Zk/+PJoCOiJSq+c2H0dLiuDlCUVtn4skLMTLQ27ny51aCc9RqSsW5MX3csimApb3dTlnQUqYYT4Pg48ZNzNAgfglgqW9wAcbnx9UI1CK6bZ944WnjuDW+V35sNMltFsK3GMdNoPYOse6j1vKFVMPSL+wnDv9/RAApTYRUHffOVKp++TvTDcvuMqrH0t5u925pH3Ik8YswP1QQqy00Nbn9G9c8Lzb4sRNPjtOYXjxCvCEbHGnEpo3n3hr6xQEx5ooJJy0bz4wZFpCCNZPE8Tzg5X0U1zpUASsAqTNaqhCzPCzmt2S6Vt+iLkOoXAtERGuf9UpOaG01/y8SYIycb7M0NTk2kTUqdo4TTy4SS/2I2Ni7adYe1fARjMyvHUrXAaJi7kKtRezM0SdaPU5V44pMFtVviOvVFIv24yWuUizVYtxQVLYC1M3akkRMo7XhTomzBRDt9081XqwW4Zl0w9JWbHB6XPzNCQ1+G31Jm91vDE3vS9A2ek7+XyKAAtQ0LGusqV+yiI6OYHDTyp6+6d5VYWHoRZCPjVtwVpqODgttVjC3GjdRHgiN0CrqhNs19I1ReRGgtn7ZJEd1Vm/nqu/1PHDT3b057+s2KO4wrvuZdP2yM2tOXlIpIovF8RxFhifMObM8LPO/ZVy3wiIfLSl0FasXqSoY81PQBdYPHt7ZtTa7s2tt7oDXF0BqspnZ6fplFx3MaPi/lQCmZBLOSM9fermKnq0iH6ia33wY9fUe7e2hKj80sWSN6yffOWL+KXqnaqhCuBjarAlkoYbBi3nX/hKQQLUekfLa+csPb21tNROrhic5jn7IjZnTY064vRYQN7w7LAxfjuCE8fJL1WiOIL+gv3PlzYCpPmH5oWLMReoXHs1sXHGLEb2m76E1mw9uGl9sAGtVTzSxWHu6Yek3K+rPr/17cIH8zZ+3oCWRCvyvicl/tnfjugEADm1K8GJHHpDyk5bVxXzdKuieXt12DF1dfl1TS0UwXNwhIjlFrjKq0zyv+LPdG2598Uc/xvvIv+GH9o0vQzMyMIHPfr7J/eHdJMLhdIs4zlUaBFt8w78MJjP9qaHKQ4zjzezZuOKuMaaoATQ9b9lk4EEsRkUvwHpbMl3tA39rTpC/yTOamhzGj1fa28PKxqU1rtW/YJyfYu0OMVInInHr+49mHlqzDiDdsOSbJpb8z7CYv3RcedWve7P90zxsi+c6D6eS+Weeueu2p0M92KtGJ/VW4k/kKytqYqGnCdFEfLi4ZeOU/Mn3n1Sk/cYwum5/d8MRWHRRfdWjL06r97HTsXKMQpOHeduezpufG/E1RnyLdP2S6008ebH1c//Su2nVL1+D1vafSIDSSx/gvaYam691Y8nLVUeWrYIYwuLwpZnONT+tnrdsjoM8rGF4mxr3k3MO637xnvaOIbufy3CRc8N/tE8l5Pgw4GiFI0Q4FJikSjVCDCmJUMUKFBT6BXaK8ILCM2p4ynV4hAW8KCI6QgwjMG3huYf2DzkVmU1rHn+Ft91w/oXGK7/RFnPrertWn1Mal91v9ddf4tH1E/8Vc/CPI0CLA+1h1byW6S7BWRqGD/d2rX5gZBA185a91aqdgciwQXar8ja1dkama9WZ1SdcMMd1nWnnzcr88Ve/6siPvMqzN1RXTR6fOc0xvFWUJuBIx6OcMiAorbWRj46ZDil9TOnjlD45CH2GEZ5S+DPwp+eH0n8+8tzMwMjN69fjLlxIKAIsXhyr2ZucbiW8U4xTZYT67gdufoamJpeOjsjaQgWulvI5m2vjns7t7Vp5xz+eA0orvarxwtMdDT8pxpytgq9+eEHmwbl37n9xtDrSJy5bgKNn9G5a+aX3va8psW/iQe/jLTbgHapc4HhMIw4UAR8COzrlY6ca9IB3l1FyjJJGwDgGgwfEgALYgBcxrAkNf4idrPeNYETrW5vct9+RThcD+3knlvyIzQ19ovfBNdcyc3GcresKo98TESNI1y9pwY39kiD4dO8M739KeJZ9szpC/kqiaapx6cVATWZP5hfVdan5jnFu1yC8pvfBlW0AE+a8uzzwhq60QgjmcSOka5I97e9Y2NHb1oZtbZ0Vu/rcLc22yL+JskiS0QQFRRQhRCNdKvJ/JiZVSwQRLIrjxhDioFkQw124/A8vsUIujrjg85/H/cGtSz9oMeVFV38zvGHFnvS8JbMcX4t7H1rzHGBTDUvPEePcLKp5Ffs5ce3NPfet3vGP4ABDU5NJD6eWiOPeZG1wYyaZeQcdHUF1/ZINYsyGmITf9xnX07vxuoH0vGULsPZfY0avXfuB7c80XNrlA/j3sNxa+VQsxnyAQhaAoCTT/97euUWxgBtPRieKRe43qt/wFnLziMKuPfnCY/2CPRPHbdDQ77UJv7X/3lsyNSecf7p68VWgGoYs6e+6eT2zWmLVVeGkvg03v/xmlbK8qclvbaWufUuymLRHOBpe5pQlLwkK2d+I2l+D8xvjehNVLRqG3Sr2z+LEPpa5v337CE8W1jPXcfmSE+M8EkAeWxId/3AMpnSEKEIZhhzYgDXG8Fk5STaDooqk5zW/wwR6d89Dq3fUzVt2fKhyjwgJq/6SzKY161jQUsb97bmaxqVXYEV7cu532DIreKOKWd6M2DnwZKqh+ZdOLPm+0M9uUuN+ED+cZhw9AUw9lv/u6VzxJxGx61vVfctb+S/H5UoTpzLT7drPrTpO875xXAesBdV/MDIuiil9ZSEw4ZeaH5UpU/MmzMkgql+6586mby9q6wjG2JmSbmi+XlzvwsDPX9jftXYlixfHWbeukK5fehYORwZ+uC5eSOzau2VWFtr0jegDeYN+jU3VNx9nDeP7N636U2QBzVJatkj6ef/XJhZ/Z1jM/SDTufrfR25yBEKFXAfTYx4/MnHOskNgIMzkPOfkr7+VJ59PR2vfDYl5YQnykQg/+3uBX6KIgB8atOiAFapTOR767B0cVpsNQyuOU6HYIrcX81xWtkheaG2dlmhrezGfql96I2KdTOfqZSNmaNW8JYuMmhMy5668lrZXiJ/XjTPIGyFQ1XHnVTtx90eI6TOu+VH3hpseprVVaGuzzGqJpZL+dU48eZEtDLebMnP5RyY+1dPW/kRR79WzQvilE2dSMEyA4oggIrB3OM59W2tZu3kSf3m2lpd6k6gKZV5A3LUgfxtiSGnSEQhCIVt0CVWoqywwf3oPF8zZwaKj9jC5OhcZmRoZAW45ri2yw1re750qd+oN6qS+uWy2sfZK1dgnMzPYnnohfybizs6UzbmWjqtDEC2fs2y8F9NjyjTYtLNrbfb1iCBvxNGqamx+v7F02bJgW/+9t2RGzbHtZQ5b1xXGz75gQpj0fmjD8Or+B1c9ahWCe/iAY/gfwAuKhCL7y3nHAbzo1Xb2JPjL1lpueXQS926NiGGtkIwFxFyLPUA8GRGM2V9XW1Wsta9Y7VaF4YJDaA3p8iKN03s597idnHnMbo6YOARuZO6GwSusp9CN4QB+aLnMPZWfG6CuYdnswMi51oZWkN7erPdbtrQXAame13yKo+b3qvYhi9wXL8rPdm9e0X2A1/IGCdDaamhrs+n6JRdhZHnvplXvrF2w7MQwtBfFXHPt7g0r9tQ2LHt7MQw6pdz2JHPi7O5a222BYgef9BJ8PcgJYYg1JrJshGglygGiJubpKDF29cZHiXHPM3Vsz5RRFtsXGhYRcvkCuUJxP7AhHvMoL0ugY1hmuOBSEQ+oP6yXxbN3s3jWTo6ZNBj5BD74vmA18oxHHOWx7kVosY6D8cqUMM8n3Sa+OSJaR5QvwLgFLemBs2f1pdY+vEqMOb930wqpaVhylCKzeztX3fTqMelXJ4AAJBtbJsS1uM6JJY+3xdw6Ifi8VfcajPzFM8EPbSANIfLxTNeqM1UxItjgHq5wElwTDBO6BkMcIdznvaqNkAktIRRWpfSJvrjMs4gX/b4nE+f2LRP4r/bj8UODY4R80ad+9hGcNHdWacUrxjg8vvUF7trwEGWJOGoVi3DJqc/yzgUvMWvCAG5CwYd80YxOumM00gmASPQZRfJGPOoiGgRYtxwnHOYKd6F8bX2ruovaCGYuXhzv6UleCLYqs+n4H6cbHrkD9NRiEJsyVKQ/lfR/Lr736d5H2re/mihyX0sAxW0u5nplF4XF3KfFjX0Q6yw2NvhIz6aVPwRINS49RMT+RFsxImKD9frvTpxr/GFCz8E8t7dcHnwpxeRUgdoKn3R5kYq4j+dYHLFgFByNfo68noURgo2vLfCueS/x+dWzyQw7eCZa/Wed0sCVl71rv3f9wy13seZPG6hIllEMQ1zH8rFFz3DI1DxkS8+NQSJhR7yB6HtCsGoIrGG44NGX9chkPQZyLrsGPI6ZOChzpvSbYJjQTfLVYL0Ou4vkB+tbT3MvXFlZK7Hix4NAP1zixBeMG3urRzChNq7TbGgel/LCQCkyKLRsMQdmgLivFVDJdK19qfT3h2oam9crzneMl/jv6obm40SclWDp27S6XTaCv14vMnG+F+YIjWJyvpF/+dU8/vxkmrg7gIZF4q4yLmmprQiprQyoqQioqfBJVQSkkwHVyYBUMmBcWUhVWUCq3KcYGoxxcZyIA1zHoVAoRp5bGGJDi+s6DGVzuK6DYwyOo7iO8sTuNMNhjj39HgN5l75hl95hl95hj+4hl+7B6OfeAY+eIYf+rCHvg8XDODEKYZKjJw1z5yfulkOq8ibIS2ji+n2/Q3d6TX++yaDbUw3LviRxLLRZ5YJnReJiNKzzAvvAzq61Xfugm7aQ9tcVQZHSrVtwwczA947MdN18K01NLgsXWtrabO3c846wrvd9Ey872+Zz902fFJzZtfaWbGG9znVj3K2WcTZAHYPxrcPsz5/CxCmNXPq2s9i5J0N33xDdfYPszQzS0zdMd2aQzGCObM7HDwM09MEWseqjtogQ4hoIrIOIwTGG0IZMnVTHkYdNxapS9H3UWrbt7ubF7XtwHIO1FmsVx4SRjyEuxsTAxBETw3FcyuIeVRUJ6tKVjE9VUpuupLa6gprqSsZVlDGprprr19zGXRs2svGzm5heN0ixKNbxVMQwYEJOk9PYXN90fu2zw+67jMhLqH4NkWrPZfbuDSv20tJiaG8Px52wpMEzdsiKc74gR0nM/sdI2s3BOEBC3z1BTLi85oQlD/d0rN5Bx0JDS4vT3d7+DLA43bDsJ7G4/cmDa9dmeztTVU428xvjUOUXIoVrLcQTITXJLGVlFby7+cyDMpkNA4q+z+DQMP1Dw2QGhhkYytE3mGVgKMvgcPR7NpdlaCjLYDZHvlCkf3CYweEciuK5LrFYnDlHHc5JJ8wmEfMoTyYoL0uQLEtSXVnOuIoyqsYlSVWUUz2unHR1BVWVFSQTCRzXfVX047a77yXhFJgwroCGYIwa62O9JFVhyG/1fk5xFqztPmTBeTdmQ/dfxTjrgkL4895Nq/ZESmyPpBqa32Yc78saBjcirEJ1kpPzpgObDyKC2mzkI7p3uAzfE7ixd1Y2Lv3V4Ka2HtpLGQ5Nd5tCceiz/Rvu3KNA5VDmG04ls4N+QmMiU1NLAn1yOuTJ3T0MDQ+RSJSh1mKMEyFsAsbxSDgeiUSSutq6fxIaoVhVVDVS3moBg2N8Xt7VR3U5JOM+YVCCYg0myBK6VRwXDPN1C5ftfOCW7aHyxbGxgpTsXk5WPu3EEidYv5AHpiZs8MjOrrUbIklzE4AeVAdkutr7gf70gvOujwWxtx3a1PTzFzvuLoBYOrBDyl4R8P/CeY7hQ8UBCY3oK/CcqekiHc/3Uyz6VJRXYEe8sDG2+4gtGv2IoMsRCHNURoqUTEQ9qC9gRyZuzE0icsBzZNQEZhRijRaClMxbHMFo9Fzfz9LdN8AhKR8cRX2JTNUIG3CKAxK6cS7179XV3ilya0vL/LI7Xzik0YjMxO76sPGS9RrkrfqFHzhWr93bdfzzlY2PpGhpKdDe9golHC3ZQ9+XqK7LnBUk4huk4NskXm9W/c6B4dR7QX4CSGsr0t6O6L0kw4DvSBnEEipaZNSU1FJkdWpNgcxAlv6hIdKpVBQYkwMUUOmEyMGt4tBGE+u6zkGgZosqkYI+QIyEYYiK4Jq/DlzN5Qrs6eln7pH+qFUiY947FlfBAx3iO923pu6tOef+wQnzLyiGEvsZ4mCD/A8NfLd704qno7tWMriJHjYdzAwtKYtUbd9bjfFWSc4fBNWs+hbsoIg7KVXffEima+4XDjmkzbn4YvxiB5d74zji5RcS4Ut95c4JUzMkPDtq4yMwuTqP9UN27Olh+tSpBwzjdTBjaxGJrB6AvoF+Oh9/gfsefo4tz77Mrj09hMEwghJKGRNqUhw5fQonHT+DebMPY9L4uhKRlNBanDdIiBGeGR7uZ0+mwNSaAkhpUZW4JVRh0zMpU5MshEfMHD4ySe/HRORLhjX3V9c3f0PFXZnpvOm+0dDljIwtBWtekVcQEWDWLGVWS0yNf6KqXVmykOOo9VQ0Jmq3ipFTp5zUOeuSS3n8onVMVSv/Qah608NTzCd+PY81/3UX59fvopgtsbeFCeOKGKfAyzu7x4iZ1wugRDJ5ZOLv7XqMn7R3cPfGhwmGn2dmXYbptcMsnjrIiq5p9GU9Ptj0LE/vSLLp7kp+315J0RzK/BPmcFnLIhafdgKu4xCEIeYAEfjqBjjs6d5LoaBMqc6N6mirghdXHnm+ipO+eCYfO/tJ893DH1EH+cTwffqL5EnsOOYM+dqTQXf/6PO6fuLT9eoAXUSAtjZLS0vYtyfzVTo6gld7t2suwZMNqJ/k390yUgSECc864oasemQy55+4azQdhBDGVxZJuHle2tm73+p61VWvilPCLTY+soUrv3cTmx68n1MOf5mvn7+H044a4pCa4chDrYAXeifzYk+cT759BwxHw+rtK2PTC4/z2/s28Z7/uIPDZzbyhY8u56xT6kdFk3kNbhh5w227ehF8JlUVR09qKXJx++MTkdBQmQiEgDBWTtot8O8icoVhZU+6ftl7aWhOq5gnQftdkSzq7t67qX3X2Gzv/a2gjXs8XuzIU1/vzeyvM1tjlUrdHsv48cqePdLykQ699GJ83cCEoMi/hlnUiWOsFcSz/PmZOnb1xJlQVSAIpMQBBcrcItt29b5+ZMRaXMehWMzzme/8nh9et4rzZj9Lx6d3MHdGJnrvIvh5wQ+FmCr5IhQDJRgUisOCa5R0MsfZc3OcfWIPL+3axjdufYGLPvIgy845l+9e+V6qx1URhOGri6QSm768uxfPzVNbWYjkARF0UcwZbt8yAXWUMEo5NUEOFfjA7vVl105YlN3txuz2IDDVICqqzT7hrUa1uaZx+duUMK/20Y9luvgLtJpRAqTGp95DXfO6TOeql7e+wjlrDz98NW474Bd4t1dBTb6f0EngWIW4G/JiTzkdT9fxtpO3Yf0oyJIuL1Bdbtmxt69kuZjXnPwde/bS8vFv8/KzHaz86POcfeKuKDCfZVRRO0YRFNcpgWiA60SQhmMgtKClRMNpNUN8/0PP8C9NPXzwp3s5+W1P0/69/+DYI6YTBCGOY15t/tm2O0Pc8RlfWYSSgeXEoGtrFY9tr8LEwgilFSQICBNV1NZks+8AvnNVw+P3Xv79rX+KcqCaK2zgZ8VNvMM47tHW8ukMtRtHuMCU8P4UVn8owtZ0ffOt6folH6uet+z4yJZpsxNOWjZ+0SICXY9rhPfg769NtYR0rn5kMthSBMeCcUOmpHx2dvdjbYDjmFfogRF5/9zL2zjr/VcRH76dTV96lLOP30V+0FAoCCrRxyKEKgRqIgCPfbI5UEOg0TUj1xeKQq7PcOJhvdx39WOcWHc3Z/3LVWx65DFc14ksrAO90NIi2bm3n/I41FXm90V5HVj3+EQGch7G6FixJfgoynt1Pe7l399amLl4cbxE0FovltxkhCPDIP+OzMabv07XT4L9RJBTFjsKyy/QcDbGOcd48XMkDEjVNz8lRh6OO8X/Bf6YxznFc8I5YR5E9tl9VoWKeBAFVvaWMa0mR7EY6ZqpNT73bc+QLxRIlrn7WUJakvk793Sz+INtPPPcDsyMSZz9rVryRQfH6GtGtnqHY4RWOP6qM18RM9ifw4SYa3Fdw+7eIc697BrW/+oLzD7y8AN0gpa4wmdXzyC1lZbyeJHQB9dAPmu4Y8tE4p4lW3TGalUT5lHxmJODk4F7xPcnp+qXfMAY8xFV7dfAvi3z4OrbR9Ja9lPCvuozg50rLylVrUzTYv40C6cDF6C6vKoi/K9o0HaJU4YEAQG6T3+oQsyxbO9LcNeT43n/whcJCwJGmZIusufRQXL5Asmy8v3teyAoFmj5xHeY5D3Itz/ZzcDgvuy1V1fW4CWUn9w1g97hGFec/yR+QV7zngj6hlQV/LqjmmUf+zYbr/8KVZXjUFVEoviEMRAGRfb29nNIdTGKoaoQiytdW6t5bHsVZbGAoYK7v1kjhE4C18tyAcif56aHd/6pv/KdiNHAFs4aeHDtpjGTPxrKcAEGN63sGXlWpqv9JeC3wG+rjm+uduJmyaPr5u9QXeeEHXoWhYNnVWtp0tZsPoT3nfJi9A0GJlYVGcr59PQNUJNKlzxdRs3MK793PVuf6uCxrzxJbTobKTx53cQSGAd3bp6AEaVl4TYYegMJLSXmO+OYXcxvjfOxr/yS33ztcsLQ7mee5gtF9vQMMuvwYJTDcZTbHp/EUMElGQsPHjsvApbF61tP+8yito5cbUPzd0O/+OTAQ2s30dSUAIIDig+Nm563bIpYe4LJxtbv3dI+NPaJ/Y+s6mt6X9MNHRvbLPczB+EI9Q+SlVZ6yWQs5P7nanhuVzmH1mQJrVBbUQQbsqe7jyOnRw6W5zo88eyLPPXcNn7RfhMrP7aF2poswxlnNGhuRF9bpBilGBgCK4RDkRX0WiJr7L1lSZ9ffWgrJ3/lNm6/4BTOPqWeIAgxJRYq5IfoGSgwflyREEFQcsOGO7dMIObYg/szimjkNB958ukds2hj86HVw7/o+uMfI5+gY18mYJRRct5sq7GYK6GdaQ2n22RQnp63LBZlVGqltbpXHMmML888DBAWmeeUE/MHCY3gHMykjzmW3QMJ/vTkBC4557kSHpTDMUX2ZgZGMRw/sHzk6mtZv/FxZkyMsWVnNRPHFThsQnYkCkXR//ukqTgmmsw5h/fx/pOf58prb+SMk+ZgjItViwH6BwcYzsO0dA4nqTgxePDJKjZvqyI5Yv28QnkjgSX0KokVB5kHbB5ynFS6flmzSNhn1cwEnSHCYSiHIHKUQ/hRl7g+nblv9X8Atq6xZWJI0Gbc2CVCiLXhtU8/Xv1YqWakAcCYV/enIpPUct0D0zgkncMAT+6qwlCku2+oFIx3eOTxZ3hoy7PUVpXTOwyX/qaeCVV53nJ4N0uO38HCo/YwuTb/SlE0khlqFSqi7/KM4lQqZaJvPKdOFRz42sXPM+uqB7jtnkc4f2EDgW/Bccj0D+BKwLN7xrFu40TUwk0PTsYPDXE3eHXDwEQzY4R64H/njOvf/afuRKuJV8wQG0bYlV+wKuwEeVmQKnckp7GmYem7Ay1e43hlU6xfWC/4n850rt3Uty+P6XgCUIt5NW/eqlDmhTz8cjUX/vDkKKzpGcKwl/6BwdHr1tx1H4PDOWqqx2E0JFVeZLjgsuKhyax4aApTUlkWHrWHw+uGCUeilSpki06Uz6MQj1u6XkoxVHD5zC+PI/AFeRNMowqJOAQ24Ler7+L8hQ2j/+vuy1EWK/C/f5nBDztmAOA5lvJ4tPpfTTyqxRCACMdHkcf7c+mG5j+Fhdz3Ve3Tjiu7g0B6qqv7dnllZdrbU3aJm2pYNlsMXxE3doH4xb7Az360Lxv/KVtWFFtbW01bW5vdu5JKYOobUZAKeK4S9/zSincZHFQGhyPvKNM/yM133Esi7iESYiSSy45RqpPRPT1DMX57/6Gjq15ViLshc6b0c0hVjtAK+cAhMxyjGBoeeqGa0L7xLF4dFUdw5ERl08MPsas7w8TaFABDuTxBaCkvs5SVEsZ0TOLAayYhhaDKtL0rqaxbyiBGNvduXPGD/XRrlFX4NsEe54raHxivvEmL2V8bK1f0dq3eOXLh7VtujwO5yjoma0AVYUkBy+uvLqumxJbR5YPDkTvbnenHGMExHj1DHgk3JOGFyJhErLEEHDVzXUvMsRw3uZ9zZu9k3twMH/mfE3h2bwXrrr4nGpXzprNdCbOGI686jfsefoblZ8yLrKBcrpRxIVgrbzzfXEsZIFAVr45NgeITntjuVGPzHViuNbhZxa/FmDNF5JIgtB9yMbLLFrLfUswmEXtSet4yR60OIVS++LK6wO9snvGeS0Vo3yh7K344YsJFWW4FP/r7iMOm8KG3LeObP7yGy+YNsvaRCTzbXUEYCmWxkLhbIsYBA88VHTY+n+bPT9dxzW3HMG96D3sGE0ypzuL3CZ5RCKBYlIgbXseSGtVZScvMmh42bn52HwGKPtYqQRgSlkJhxjivLnv3s7JAhPKEKdYA/GFx/40X3pJ6j5NI3qI2QEwMFGxx+Hf9Xf2/dCWw/9Hz0OodNDW5FUOV1WVGqgONxdHwLZhgGEAdp9okQoIsdqwH/EolZBjO5qk/diY/+uLHI06wIWf9yxXkcoXR1fzkC7s5blI3X3vfE3xqZ4y/PFvLmkcmcffT43mpN0lohfJYEGE8+6wMyuMhFYkAVaHzxTSuUXqHYiz66kLOnbOTs4/dxYlT+4jFI2KE/utB4II6cNTEAba+tHv0rO9Hi+DHX7yc2UcchjGGz3zzp9zSsYmqinJG0bmDWEKqWLcMowFVAAuv7rC9bZyfnrfsPRrahSLkEXNnb+fqFQBuz0Ord8ycuTi+tWNdcQi6h6C79LzHz2ipr9oJuBKW4UYc+VrujpQCKeXJBMceMWP0fCIeI7Dh6ETu3NvPjLphsFBTVWTJSTtYctIOBnsdOp4ez62PTqLjmTq6B+P70PNSUGSEM8pjAYoQqPDQyyk2PFfDt+88irlT+zj3uB2cdcxuZk0awHFexZIaYYEEHDmxwINbB1D1EfGiUCkwa+ZhHDNzemS3V1VG3vvrpdsKFgcjOZIAV199aAxezPduXPFr4NevSMwat6AlvfX+9ggvrq/3auKTEwA9960evPOGrgGJnMD4m5GtodVRqCEMQ0Jr97NQXMlx80PTeObr08kXddSvi7uWsliIVXBdpWc4RmjN6IhjriXphXiuLUXNovlIxgIq4hBY4S9ba1j/VB1fLS9y/JQ+6sYVRkWStULOd8j7ZvRcIgbP77LUTR6kUAxJxL1Rh2w4V4jeHQiC8I1PgUDRN0mw/PLuOXPTDScsSvdN/fbWrd8v0NTkMjQkdHUFgLpuEPwg1bj0z9GIRG1RVUTi6XlLh6++OvM76MiXyoXeVEbyCN4eBgFhaEehB4BQDZOrs5x8RIFCfp+sHrE0BGicliE2b39W73oxzZ+fqWX3QALXKGWxcNT7HbGCKuIBRsAPhb9srSXUaKJDK9RVFDhj1m6OnjBAMhYyXHSwxgE/wYDdhyV5rjOaOzkC1MmbsXFlTNw/GlltpnrbB9Lzlm7tJXMXXV3+SOWlK+itEti7iq4pJHJuYW9x0AdIp8rO/dkfK5cDvyuq8cvU/lV1N0EY4AcBMc/bxwFuOfOm7+XKd74cYTjyOvbiyFGE53aX88cnJnDLo5PY+EKa4YKLH0QK3HMUq9FkG4HyeDDKeSOx6odeqibmWM6ZvZO3Hr2b1BEB/3tdLb9+pppYLHrHeMxDNVLCMkYHvZlGDZ5j8wBzqweeXNXR8Z+pxuVno/bkVLam1pm/fFMpxwq3p3Plb0fuGxzzjPTMxbcO1XpXR4iRHS5h4vJ6gfREIsbTz2+j+bKrIrltlb7BYSqTiX3pKpNSPNhRTdC7jSA/Jt3j9WAEUWaMH+aSQ57jkrOf419/1EDH03WcMK2PjqfG0zMcI+ZEYsw1+4gxchR84cWecrbsqOJn906ntrLA4tndPPZCkVknxlE1iEA8FsdxHK789s9IjStHgMe2vkiyrAxrLY68zvILQT2yAJ87t2N41SpAZdBX5w+eSNqG4Y2pxuZ7jOr33fTcJbN6H169hfpLvBSZpLGF8sCLx3ut/3bH2uMB/IIzFDMhKEYlyrV+tQXrGkP/4DDr7oki0Z7nEvgBybKy0euOmTGZNWuqsb7BNfb1HZwxnnahAMWsoawqqhuYWTfEjZdv4KGnq/njExNY++gkHn65mt7h2KhOGRFxIhFelaiILDI/NFy/8RAcE9J9//3c0/kopzXOwfM8HMfQ+egz+EEAKIl4DM91RrMjXmX8ChgtQBBG63nZr8+fX9VghkX8d3lilhgxU8BBbVhjMS+4GjOXpectP0XD3eUCNWqkysW6EksgNndZVL5oesIgzDuGRGgPhoXuTwTHMaTGlZW8TYdsNkciHhu95qTjD6c3l+a5vWUcPXMICm/OgYrbECrYh0zG4YSj+jjhuD4+ueQptm6r4LbHJnLboxN5bHsV2aKLkX0Q1ojD54iSKvfx/RDXLWPG1EkAVCbjGGNIxGOIeJESDvX1F4qC4yA2JDfoe33gU/DN+V4s+WlsSBgWd6q1PxbR9sz02N20t4cuVl1x5HCF7Sr6gmC6rYZ7CMLb9j6w6g8iUB33twWWAXFIlKA4eS3xH4TCYC5SurFYlGlWloiPZjTPnDaBaVOP4FvrnuasE4YZzgqOvPFaJKtCImF5dm8FvdkY16+fSjbvICiOUZKxkGnpLG9rfJkZ44dZ99hEtvcmMY6iCq5R4m4JYsBlcHiYi899K1MmRrlEVZVJHMeQLQjFIFLCI2Lt9dwKMQjKwGA2tgN8rFJt/eIqVftjE9N7e+5bFUn6KEFLXCW83oZck+la9fJBHIvoOI1uOtiNw3j8V59+KdVhpcuLHD1zEFUYKsR5YKuhsjziiCAIScRjXHjmiVzxjUfY8KKHaviKrLnXgzpcM2KmCl9ecwxByawcKfoYgZ7LYwG1FcUoLqFgjDKQ89i6pwJEGVemuJ7L+W89afT54yoqsNbhsNohpqYjDOupXZX0DMVwXyvmMFJwG7Lr8ObhPaU62O9nNt38+EG6RFpA3b7OtR372S4jnU9KhQTaipE2rA+P4XAcrwGNOKL0FTw+c+4TfLr5KVDoeHQ8Z3yzgXEVZaPYEMDbz1vIt36xki8v/TPnnrCbQta8oYDKaFClwvKvP21kW2+C2z91D/nhV94/lhijATGBbNFl00spfrNhBjduqOaowydwWuOc0dBkalySovW46MRnaG15AoDv3jKT/2yfS0158TU5AAdUeAzQaO7WPE5rq2HLFqG9XQ9sZ+AekK0lr0jMWoihDatCJy7veC0/MLBCVZnP4mN3YXMgHvQMe4TqMq68bBSuCMOQQydP4sLFZ3DN6q0sqd+DKQFy8oYIAI4XEVwkctoSbohj3hgSWu6FnHfSLlZurObU+afzP63/SmV5ycJxHOLxCqrKXXYNxLFFQSycPWsX11QUKAbOqCN40Me7oJRy4aK50zFtzw5aAxw1KGps/lx6/oVP1sxbsmhM10HYO9Kkh047jBXF0YMQwYiSLTqcMK2PWZMH8H1BHBjKuygeqeqKMWwmqCqtH17K1oHj+N66aTgV4AeG0PIGPsLYZGgtnXsj9/qBIAlY/edJ/GrjLL7zmfdy9OGHlbx1KemtGOlxZXQPRso78OHISUM0HpYhW3QOCvKV2qg44TAWSyfA3XdH/6qY21KXbmy+N93YfGtdU0vFWIljRle+1TPdRMWRVqP+DSO9OmmJPACvii4bst2JHVwIScmsO/vYnXhxJSyxfl/OAxGqypOjVxojWGuZWFfHd654D1fceDidT9UQT1pcB9wYuN6rf+KeIl4kz40oEovOvdY9bgxcF+IJ5aXdlXzg54dz1WUXMfeYmfh+sF+mXCwWI11Vwe5+dzQHwMTg/DnbI13zahaQh2jItp4CDwL8cEuLAiQSwVTjxN4imHPcIdKlBS6RCBopuHbNpUFu8ORYIfeHUSXR0uLIxXDDDe3IXIb9Du4mzrvxCcempYhAoEIq6XP2rF0QlOAFhcywSzzmUlVZsZ+XLCVR9J7m09nw0NOc8808Z8w17O03FILX1gcjSvj57nKKgeH0LzaNKuFXdxIFx1gmpCz3PxEyr/EMrrr0IsLQjmbIiUCoimM8alIVPLXThbAEUfhwxjG7mTguTz5wXrkKhZA4jglZP+lshqOq0Sj7ofv+FQ+lG5ZeqCLZnVHWiexLzCrJp94HVj4BPHGwRqvvuAlUkeAeVhPyngOxIRElV3RYMKOHWZMHCXyJvEULvUMulck4iZIZKgfUBoSh5dorP8Du7m7+sPZePr60l5l1ffQPu1Eaohwcx3disHLTIfTnYiw+fhehf/BcItVIN1UmQ3qGyvnCivE0HHcMv/na5TiOO6p4R7VoqOA61FZX8kBWGCrGKPcK+EU4fEKWBTN6uO2xSbwitVQxBIhV1hw4TEB7o+aBrwBZ3P3Mo+dSJmrDFR01DcuWAFNTJvcbkXUDvXdyZ6Vlu+sxOSzug6aNQDEwnDN7F25cKQ6XVqNC95BLqqqcmOcexGyNLvI8j99+87/4F1e4e/MKPnr5bg4/ejDKeA4PAoCX8oKe3VHBCz1JPnnxUwfPCxp5w3Lo2VbGRd89gtMajqX9e1eRrq4mDO2oVTa26AMM42sqyRaF3qE4FTUFQjV4ruWC43dwy6OTDpQ+1vUwQY7tbo47AS5tqHega19Yb1ZL5IluaffHEmDfK7e3h3T9xK865Z0pgHTjso8p+l01Kr0kP1LfckZV+kz6jaGdBGjUc6dk+0dtAM46ZheEpaLn0nfsHXSprizfD4w7kAhWlbJEGb/95qc5aeGHOfYzb+Hq/51JfiAOIfiDwnDGkO0z5PoNw/0OQZ+Q9w1+IAR9QrbfkO835PoM2YyhOCAQQpjz+O/2Q5n+8ZNITX8va370BcbX1JRSEuVVgcRJNeMoBi7dQx6YiMvVh7eW+koEgRmbHGtJgHG5Xs6VAQN6kzPlvHTD0uuq5184h6Ymly3txVJLgwMLNKIy+nT90nkqsszk/V8CGVQ/qGp/nNm4+gc185Yv3bszPhN4MFv0fpEU/98cQwxQR1RsYJg7tY9ZkwcJi2OyBlToHnSpOzQ5yu4HkylGpGQCuvzw8x/grfOO5D++9luuf+ARPnX+Nloau6moLqWJ+1HO0BipEWVNO0rc04inXQhyHis603x1zWSeG5zN1z/7Ni57+7mvWyMw8tiJddUUwhi9wyUCAEFRmDo+x1tm9vDCjiocx4KixuDYHIUg8H4Bvkyd33zooJVjcez3jHg9dHQEqcbmsx3jTpOE+f3ejvYRDFhduDrK+sA5HLV9PV3tT6XqW6qUYgp4FFqNDR8+ajDvjRfoqjwj2FzsYI2X5CIgLIbGCQfjnDt7J05J/BgTiaUgcOjLGo4cV14KcL/GwEVGy4kuWnwqp590HN/6xa18bsWf+NLqpzh/zm6WHN/DsVMK1FYWcCpDyuIQ9wRnnOIEhu6hBE/vinPL5hSrH6pjT+FIWs5dyIoPXcAhE8aPNvN4rQKNEX1wSF01auPsHYqNyomR0qslx2/n17cfRa7ogmBj5ThBgVXxRcFjClIT6iIX5/d7Hlj5HIsXx2vmLb/eWnuOtfoMWf/0mTMXv2/r1nXF/eqEHRN2qUQQqjiDlWrj48QNnhvf8OhhvlJmxP7p+htanIsvvsGi8nW/wDIvhhxWM6zNpz4n587eiQaMyn5jYDDvMpQXqiuTo8H614RSRHBECMKQVFU1X/r4O/nE+87hpju7aL/9fm7+/bNo4SUmVAwyuSbP5pdi5IrQ/IXZ7OpLsKu/nKIzmenTpvPed8/jHefNZ8rECaMYlPMmCvYm1tUgjrCzLzEqNIwoWoSmI/Zy0aJnOGbigGIRv0jgCV8HKwbRlBUNTfiv1Q0XPGm6zbfVyAsG29izaeVT6Yalrf2p+DHAw6UCjag2uNsG26rFuSg9b2lOrb4L2N37wK0jVtHVABdfHImL2EI2hR36exzevWTuzmDJvJ0uBQiLpZfUKDN6IOdRDAzpqvI3XCNGKZpmrcWqUpNKccnFZ3DJxWewq7uHJ57dyePP7uSF7d1MndUHanG8cZw6Kc3smZM5ZsYEDp08aUxAKKoNe6OTP8IB1VVpqioctvfFwe5r5mEt1JQXaf/3+8HHYnAcq9dJE11GhHELzj1Ui7G7VPzjHYl9SjX8Xu/Gm740RmHvDIuxvdFfbWPqhLvWZv35F/zMC82nRKQ8tJyTOrZ5qkk6V6vaUxXdhsjaaUn9+eaOVX3G0BrmWYJSEQyJOkZHrbkRVu3Pu/jWI1UiwBvBGVS1FL2K/IiiH6WIGCNMrK1hYm0Ni+bPfs1nFP2gVBRuEBOJNh3jhb8R0K8skWRCuoKXe2KvhEIUwiFR10PI6YATp1VROefsc2Ibe2IfVQl2Zzat/MTI9ZWNS2tiIsfbMJyr6DOZqHuKAawZa5cOP7Bmd1/nqv/MbFp5kWOchCk3j6raExX9HOL+u1geezkn7z7v/POTcirP2YAvOUmMY9SOHZSW7KvBvEtgPWqqKqLVr4otBeyDMIzybqwdFU1SKr52HIPrOLiuQ8zzSMRjr2pFHeyIeS7xeAzPc3EdB8eJmngYY0YTxcZWZIbWEob73ikILbGYR116HNt6Ywe0JR2Jeat1kmqwfEEW8DwqsrGXuLHybQxPpBqav1i7YNmJAJ6U+xadIGIO6etcdUupQZ49WLcUQ/0lzhQv42aD4q+tcX6R6VzxiTH/f7ymsTnc0OOcpMpdz9w283uHm61L3HJOCYbHdMUqLbfBvFPigCQi4L3OJKot0j8wyN5MPz19Q/T2DdI3lKVvYIiBoSy5fIFsrkC+WCjl7gie51FRlqA8WUayLE55WRkVyQRliRjjKpJUJONUJBNUVZZTkSyjojyJ63oI5rUD7U45Uyak2fSSISw6GAn3YU9K6JbjhEPc61TwPY0Y1Crzh6BtALilfP4FnTHL+9Lzmk/o3Xjdz4DfA7+npcVBxL5Ku5pW6GrzBxubj3XgqcwDN38CVGi52PA4DscS2q1+VpAGI/xJeaaYv1su8YpsMC6VNkBHswFM1LFKcKgZl8SGRXr7+ujJDLCrp4/dPX3s3NPH9j29vLy7l227MuzY009mME++4BMGeYIghw2jqgfBjNrtFckE4yqSWGvxg5B80SefL1D0wyiLTSSqrJc4GA9jYriuh+e6lJd5VFXESVdVUFNdTmpcOTVV5VRVJkmNq2BcRZLK8gQTaqsQ9Rn2PfYMJphUNRxVf6JqXMQW6Q88PuQ24F9yySVe9Qk75mceattAU6vL+C063N6+exi+nq5fdlGqcemHMpuO/xktW+TA3aIO2isiJoH66t0KwMxzYlAZRI4E0NB8pVG5TpuaXOceCRILeULv4cPEuM6GhGPaL5HJuli/jA9/4WcM5S09/TmKfoAN89gwi1ifZFyZUBVwSKrIvEk+E44qMrGqyPhxPhPH+bgOXHZdPQN5j5gLmYFhPvzuZq667F34QYAtNQD59arb+dRXf0pNahy+H2KM5crFW6iuKNA94DGYM2SyHv1Zh0zWpW/A5bmd0e8DOUOuKIShgLiI4+E6MfJ+nEPrkvjWjjR9UzFYE8MJC/xb4jR58oaWi5xLH9rdYrz4V1L1S9+d6Wi7d1+L4/Ha29V+Y01986eqjuus6m+/JXPwQu3Ro00B2TuUfKI6Gbxl4tzFdbseXreXrTDuhAtmuo7zM4QJ3Zvm3FBT/+iReuLyKX2dN/9RTuV3/t0c51ZyRTBI4Ii6tgBnHL2HlpNeZCBnmTghT904n4lV0QRPqipySHWB8ZV5ymM+MccirqWUgRc16xbwc4LqXILA4Ijg+wHJRJzyZNl+b15TXU2hWCQsyXFPlKXHb2PatCz4pUjVSEeuANQKgY06ZRUDh8GCx2DOI5Nz6c+6DOQcdg3EOWFqH1PTOUIfRDR0K3GDAa7xFvJ7VXVE2sN0/dKtiP2BoKtSjUv/UO54/7Wtoz23bz8OcarTtbn+gyx296BVVFvai9qwfJ0fK7s83bjUE9UjVOStwNPGyiKa7jY6XP0dVabXNiw/d/d5N79AE1fae5nsVvKeYJBAA9xpNVluuHTDaInn6OTqvrZk2BKeH0LoR/3jYq7F8SIx9mx3BUEoo7e5jsO2Xd08+tSzFIr+aOrj1hdexnXdUYUeWtg5kGCazUIAQY6o+9aYXnGOhHhOSJnrU1WWh/SYfnEjP30Io6SBwK3EDYb4tdfEVSUML0w1XnBs0c8/P/Twuo21jUtXh5jv52zYVd2w9CtqvL+YsNiijnnkxY5f5Q/W6v61mvbphDlnlvtexbkQTkHcR3s7b/7jhDnLxvuevQsjL6oN/s064nz8nDUvXn01yjPEwp20OxVcEAwSqOLKAV0S9VV2c4u7pc6JAt29Mf68tY61myfR8XQdvcNxnLFZDVZLE6372e5jPVyrwtRUlkVH7+Hc2TuZP72X6mo/IroPhUD2NesbjTnJfv7KiOlqjAZuJW44zKrnhnjbEQ/gH7L2/ERevA8LugTkWDXhezMbV98CUF2/7L0iejmigaj5UW/nil+82j4D8mbaFVc3LjnNqHODojdkOld+7ADYN0IT7qPMhvzeJGkOIyI4B+uAHtXu7pv03r4YG56rGc2SfqGnnDAUkvHgtQPhr+UPBIac7xBzLTPrhlh41F7OPW4H86f3khpDjGJw8AI/VVSE0KnEDbOs3J3hXZOXkBWguv7Cd2DCFzKbVm5INyz9vKInOla+qGp39jw02kl9TGrxm+0bWvr/oU1N8Wx2/NEWu0CxXxarV/V0rfxRqa/ofv36SwF8ffpWYtMr+JFbzvvDwSjZeGxauwAmAYODLg88l2b15kO4+6nxbN1TQWBN1D3Xs6PlYK/oK/0GUxml1B9agbzvkCtG8dyZ44doOmIv583ZRwzNs1/ejypWBJxKjM3yC5PiMpmtviCaalzyDbWSznSt+gBAun7JRYhzlaotQ0gZdZp6um5+al/k69Vjwm+kc65WNVw41xW7XkUv7t248g5mtcQOxLUPxjbBvbQ6DlcTQuATIjhGoBAYvnzrLFY9fAhb91ZQDAwJz46plPnbN/MeKX9VjYiR9w2uoxxeN8yio3fz5SWPUVXmUypCCV0PBwfCkFb3FL4wMrZU/dJ5oMeBfFZF16rnfFNCe7Hx7XU9ZuLetOxej8ptvV0rv0x9vUfXmJjA/1Hz7sZli41q7dhc0oNl3lc1XHh8dXlu50sdt+5SwP8LF7nKD4lT5w8SeC7O3qGYzL/mDHqHYowr1YW9oRqsvxkxSvi+Qs53KAQOD111JzMnDlm/KNarVNcW2Gvg3+QUuUlb1Rz6p/OqhorxX0vIz3q6bl6ZPr5lMl5xtSLjQzd7/MD9d/RG3LD0KhHd3NO5as1BdoT9K9vXj2zOU7/0MutQRPSuIGeyw5tX7OHArT0aln5G0fc7Cbmg/fSVzy1qI8itZ2YsxndNjHMpQKEo4c6BhAmtEf2nbaO5L54tqE4al7dlCesQB+tzi8lxuZzOs46B6Wctjvd0l9eLsRdi7YUFz8wb3rBiT9S4PLheRA8t2uCshBtLBaGe2de54n/e6OZv8mZ3TEo3LP28iuwQSd7Qu/G6fV1habM1JyxpUEf+aNH3FiW+MTtMr17dHsrFhNDiFDvaP2RcPuckOIQ8oKWAo/xTttUd6SBlMUQTn2e7Wr7onspPQHR9q7rLVi+fbDy9IvCDbw08tGZrqrH5Z6LU99YW5rMu2lsm3bj0v1V1mYj8t1cYvnb35juzb3Qvmb/BwCM9kZ63uFJtfIuo+VZv14rvjP2OOWeemdx8551RvVknkyjwqSCUD7lllNssBGFUAPta9Wd/03mPwqnqOjgmCUGeIdfVnw4X+UZFEztHrbqGS9xKs2ecp7oQpKq3c+XPo5bNzXdiJZfpWrlk5JmpxqXf8Uz41T0PrNn9ZvYnlr9uwke9Zh2zm8YdAn29nasuHt32qbVVaIN0/eblxmhq7mEv3/DH9q5+gJ71zK52+TDwDlNGNT6EeVAh+Ftt4HOwjXxEcZ1E1DrfZunD8Dvj8AM5SZ4ApfPHeOf+dPnUPZ03P7/f+BqXXmHV3t7fufqhSfXnJ/M4DyLcan2+EE/YeEwSA9uibupvanPo/7MBLl4cn7TXrSyK+zGLXhQrZht3bz45N7pNeEl31NQ3/0xF5mLse6aH2595+MEuf2SnPO1kWjjMuzC83QhzpCyqhNEihFqqTB4prdNRSJ8Dsxj3aysqo6axAuIIjsSi5t0a7dPwiCp/cOB3ciovjVgaR591Vnp3b9l5KuZKVLMo61WcmzOds++HNptqWPLJTF/xe2xdV0gvOG+y+u4WhC9msrHvlQLu5u+5ic8r721tlZp1m8+3lt+J1bf2dq3cOLrvVmuUU1pzwpIGNXK7WD0uclBaTXrBlknjZNh9/r5bXxrZ4U7X4+Y951TXhueKcqYIR5oEZTglXKjU6VztiJm6/1ZuIogRkLEbuXnRvTZPTpWnVbkzL85tP394+l8uv3xrAWB9K+5CsDW3LHkfag4pht5PPMc/CiMfR+1OkDNEyKrVNcYxbhCGD/d3rb4xVd9SBcEpk3LunVv+ysn/W+iAkb3cTxYxp4davK6/85bnaGpKMH68T3t7mGpo3oBwR2bTqtaSXRzUNZ47IZT490TN13s23dTZ+r5DE22/ejG/b+8IzGcWx44K8sH8uLHHKRxn4HAgpUpShLgztuWzjXbAUKUgQlYhI8JWVR7zMZsD3930rXuKT7aN2ePlhtZZsRa2BFI6l25c8pIqD2Y6Vy8FSM9b/gHr5P/YFxveXj1cfY4oSzFmgVitDB2vqX+I7aVV/8/ezHNfx3UbmPepSCJE1/UfFrs79XyhRZCv9Jb3zaKjo0hTk6GjI6huWPpug90VJsIuJ+98WlXyjsiOhKd7Pvf+VbdceimvcF5uuGFW7LzqLbXFuDcxYe24ECpE8Eoy3i+PhQM49FNgz92WvYsWSXCgKG5qbqre2l0xt+hLbO/GtXeMbMc4ZUFLWS4Mvq5qzw4dzup/YNWL4+e/fbyvhX+fEda1dY0kq9XXe7XOtLN8G+7o71z90Bux8/8x29mWXmTKgpayQb84v39G7B7a28N0Y/M9YuW6nq6VPxpRzKn686eC845MV+ybqYZiF+if3fL4lfECYS60xyrhh4zob2MOYcIpSizO3v4+Z1tpQ5w3dRzZdP7ROcu0fOBIMtbXMeRXebYg1xjX/bANwg9nulb+iJYWJ/0yEwn9MwRdoqqP9Hau/kKkeC9YjPXSma6bf1fy/ot/a4vM/Zs8JVoFUrIC7qYrIqwqxVDsAwClog8Vcd9lVH5Z3eB/WdCK3s7VY0G9znTDknOHi/HnbKxwYS6If5iCfFxc3pJuXDo5bvzbApVZjqM5FwnUtb6qI57Vnhc+vnYjLejFFyM3thPWNC790N68EUJ5DLXHDQWp/wrUvzSWS14RlvuuYK9MNS6pzrS3f1VOWl5p1eSN2F+ocg3wRWiVzKa2damGpd9LNy71eof5fWmbV/PX7Bn5j9hRu2SttBpaW0tIr17j4Ly7at4F02lv11TDsrcjurO7a8VOQd+FyndL+xG7I+LMqPPT3CPt29XKDFRvz2xasa73gRW/QOSP+SB2glXnkGIY25b13c9m8/HluaKrgwX3/RO+dUGtCLa9nTBVv+Qiq3pm5oGbf5LpvOm+TNeKH1urfzG4t+xtmZVVpNM68i6sfDTVuPw/yQ8MGFG3e5N3G0J5qqH5JGiz6XmLxxlxVjl4t5ewL0b3sP+/dEftVyjo9Lwls7ByFiIViLzUu3HOb+uatiTD4eJjory/p2vun8fESkdt6FRD858E1vTqhP+m4imtGKqsLsuV5ffW7clHkEfzGhVZndm08qfjFrSkJV60/R2r+oiapa5F5P7eTSu/zIKWBFMpHvKCX51X3YnqqSqeA2GVCYceUSf5F8R5xKr9WV/nqjU1Dc2/tMjRJmaX93j9e16rlfP/jXvKH8ARraZ34+otvZ2rru3dtPJLUcOKNt3bMSsLPKfoNGizzGrX/bhoVksMZJqKqa51ei5KD6d+EDfmsL1b2ocYOkqg1ShaNaJ/BjbckClNvpQeUiNWo3Q8PxXQ3h7u2HR8RpWtFm3MdM6+X6Cx56E/7lDkNEXrxUoZqFiV2xFtBQajyW81f8+F+nd2/dtsNIARbLnV0NJioM2qyudVnPdWNTbP5brFXs3JSyor6pcfDWg6VpiJqrVFe233xtnXAxuLmOcBmJGx0XMlpqHN0t4esnChM9qGPwrCPmmFBYyWazW50GZF6HPE9EObVWFPdcPyCzKdq15G9WTr6UYQzXSt/H1m06rbS3u8jOwqov+PEmBkACPp0m12RNRkulbeC3zcUXNuOlX+dkJnUcKUsmdds0CEPf2PrOqDNtvbufLng3b8AK2tZp+oEsdoqUv0SFXnSEqP8gNUTq6eu+z4CI/vCKrmNx+mMFgICutoel8CqwOi9ogpC1rKMp2rXu5/YNULY/ZTd/7O4vlvbAX9leIp09n2GPAY9Zd4bIps7crGpTVAvarkauovXBhafV7iTEG7p2TWcvMoxKDqiGv6D2KNme4HV3ZVNy77gBH9Wqph6XcdyGqoZ6jK54YeXreX+ku8BOHKnV1rs5l9C3EffPF/aNu/meOftY8v0BH10W8Zb/jjb0ba+UrxiAnF6oJ3Fya4NVS3Sow5VsPwdMf6t+W6fr8HkHT90nki8h4VduSnzXmQk2YFdHSM1SMmv+PJzcnDjrzLWpnsKLmQ2MpM183PAcLOrnBo59NRy5gtW/TvKWJe7/j/APUX5A+IYTjeAAAAAElFTkSuQmCC" alt="Universidade Lusíada"></span>
+    <div>
+      <div class="titulo">Diagramas de Esforços</div>
+      <div class="subtitulo">Estática · Mestrado Integrado em Arquitetura · Universidade Lusíada Norte - Porto · Paulo Mendes</div>
+    </div>
+  </div>
+  <button class="botao-topo" data-acao="ajuda" title="Como usar e convenção de sinais">? Ajuda</button>
+</header>
+
+<nav class="barra" id="barra">
+  <div class="grupo" id="ferramentas" role="toolbar" aria-label="Ferramentas"></div>
+  <div class="grupo campos">
+    <label>Comprimento L
+      <span class="entrada"><input id="comprimento" type="text" inputmode="decimal" size="6"> m</span>
+    </label>
+    <label>Grelha
+      <select id="grelha">
+        <option value="0">sem grelha</option>
+        <option value="0.05">0,05 m</option>
+        <option value="0.1">0,10 m</option>
+        <option value="0.25">0,25 m</option>
+        <option value="0.5">0,50 m</option>
+        <option value="1">1,00 m</option>
+      </select>
+    </label>
+  </div>
+  <div class="grupo acoes">
+    <div class="menu">
+      <button class="acao" data-acao="exemplos" aria-haspopup="true">Exemplos ▾</button>
+      <div class="lista-menu" id="lista-exemplos" hidden></div>
+    </div>
+    <button class="acao icone" data-acao="desfazer" title="Desfazer (Ctrl+Z)" aria-label="Desfazer">↶</button>
+    <button class="acao icone" data-acao="refazer" title="Refazer (Ctrl+Y)" aria-label="Refazer">↷</button>
+    <button class="acao" data-acao="limpar" title="Apagar todos os apoios e cargas">Limpar</button>
+    <button class="acao" data-acao="abrir" title="Abrir uma viga guardada (.json)">Abrir</button>
+    <button class="acao" data-acao="guardar" title="Guardar esta viga num ficheiro (.json)">Guardar</button>
+    <button class="acao" data-acao="imagem" title="Guardar o desenho em PNG">Imagem</button>
+    <button class="acao" data-acao="imprimir" title="Imprimir ou guardar em PDF">Imprimir</button>
+    <input type="file" id="ficheiro" accept=".json,application/json" hidden>
+  </div>
+</nav>
+
+<main class="corpo">
+  <section class="coluna-desenho">
+    <div id="area-desenho" class="area-desenho"></div>
+    <div class="estado">
+      <span id="estado" aria-live="polite"></span>
+      <label class="caixa-estado"><input id="mostrar-valores" type="checkbox" checked> Valores nos diagramas</label>
+    </div>
+  </section>
+  <aside class="painel">
+    <div class="separadores" role="tablist">
+      <button class="separador ativo" data-sep="resultados" role="tab">Resultados</button>
+      <button class="separador" data-sep="elementos" role="tab">Elementos</button>
+    </div>
+    <div id="sep-resultados" class="conteudo-sep"></div>
+    <div id="sep-elementos" class="conteudo-sep" hidden></div>
+  </aside>
+</main>
+
+<div id="fundo-dialogo" class="fundo-dialogo" hidden>
+  <div class="dialogo" role="dialog" aria-modal="true" id="dialogo"></div>
+</div>
+
+<script>
+/* Diagramas de Esforços — motor de cálculo.
+ *
+ * Viga plana de eixo reto e horizontal, com origem na extremidade esquerda.
+ * Unidades: m e kN.
+ *
+ * Convenções (as da sebenta, §3):
+ *   forças e reações    H positiva para a direita, V positiva para cima,
+ *                       momentos positivos no sentido anti-horário;
+ *   esforço normal N    positivo de tração;
+ *   esforço transverso V positivo quando a resultante das forças à esquerda
+ *                       da secção aponta para cima;
+ *   momento fletor M    positivo quando traciona a fibra inferior.
+ *
+ * Isostáticas: resolve-se a matriz de equilíbrio das peças (exata, sem EI).
+ * Hiperestáticas: método dos deslocamentos com EI e EA constantes, adaptado do
+ * fbd_solver.py do StructuralTool (Paulo Mendes, licença MIT), com os apoios
+ * impostos por multiplicadores de Lagrange.
+ *
+ * Os esforços calculam-se sempre pelo equilíbrio da parte à esquerda da
+ * secção, depois de conhecidas as reações.
+ */
+(function (global) {
+  "use strict";
+
+  var TOL = 1e-9;
+  var LETRAS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  // ---------------------------------------------------------------- utilitários
+
+  function rad(g) { return g * Math.PI / 180; }
+
+  function limpa(v, escala) {
+    return Math.abs(v) < 1e-12 * Math.max(1, Math.abs(escala || 1)) ? 0 : v;
+  }
+
+  function zeros(n) { var a = new Array(n); for (var i = 0; i < n; i++) a[i] = 0; return a; }
+
+  function matriz(nl, nc) {
+    var m = new Array(nl);
+    for (var i = 0; i < nl; i++) m[i] = zeros(nc);
+    return m;
+  }
+
+  function maxAbs(A) {
+    var m = 0;
+    for (var i = 0; i < A.length; i++)
+      for (var j = 0; j < A[i].length; j++) m = Math.max(m, Math.abs(A[i][j]));
+    return m;
+  }
+
+  // Posto por eliminação gaussiana com pivotagem parcial.
+  function posto(A0) {
+    var A = A0.map(function (l) { return l.slice(); });
+    var nl = A.length, nc = nl ? A[0].length : 0;
+    var tol = 1e-10 * Math.max(1, maxAbs(A)) * Math.max(nl, nc, 1);
+    var r = 0;
+    for (var c = 0; c < nc && r < nl; c++) {
+      var p = r;
+      for (var i = r + 1; i < nl; i++) if (Math.abs(A[i][c]) > Math.abs(A[p][c])) p = i;
+      if (Math.abs(A[p][c]) <= tol) continue;
+      var t = A[p]; A[p] = A[r]; A[r] = t;
+      for (var k = r + 1; k < nl; k++) {
+        var f = A[k][c] / A[r][c];
+        if (f !== 0) for (var j = c; j < nc; j++) A[k][j] -= f * A[r][j];
+      }
+      r++;
+    }
+    return r;
+  }
+
+  // Resolve A·x = b (A quadrada). Devolve null se A for singular.
+  function resolverSistema(A0, b0) {
+    var n = A0.length;
+    var A = A0.map(function (l, i) { return l.concat([b0[i]]); });
+    var tol = 1e-13 * Math.max(1, maxAbs(A0));
+    for (var c = 0; c < n; c++) {
+      var p = c;
+      for (var i = c + 1; i < n; i++) if (Math.abs(A[i][c]) > Math.abs(A[p][c])) p = i;
+      if (Math.abs(A[p][c]) <= tol) return null;
+      var t = A[p]; A[p] = A[c]; A[c] = t;
+      for (var k = c + 1; k < n; k++) {
+        var f = A[k][c] / A[c][c];
+        if (f !== 0) for (var j = c; j <= n; j++) A[k][j] -= f * A[c][j];
+      }
+    }
+    var x = zeros(n);
+    for (var r = n - 1; r >= 0; r--) {
+      var s = A[r][n];
+      for (var q = r + 1; q < n; q++) s -= A[r][q] * x[q];
+      x[r] = s / A[r][r];
+    }
+    return x;
+  }
+
+  // ---------------------------------------------------------------- ações
+
+  // Componentes de uma força: alfa medido a partir do eixo x, sentido anti-horário.
+  function componentesForca(f) {
+    var a = rad(f.alfa);
+    return { Fx: limpa(f.F * Math.cos(a), f.F), Fy: limpa(f.F * Math.sin(a), f.F) };
+  }
+
+  // Direção da reação de um apoio móvel: ângulo medido a partir da vertical.
+  function direcaoMovel(angulo) {
+    var b = rad(angulo || 0);
+    return { cx: limpa(Math.sin(b)), cy: limpa(Math.cos(b)) };
+  }
+
+  function momentoAntiHorario(m) { return m.sentido === "anti-horario" ? m.M : -m.M; }
+
+  function qEm(d, x) {
+    var vao = d.x2 - d.x1;
+    return vao > TOL ? d.q1 + (d.q2 - d.q1) * (x - d.x1) / vao : d.q1;
+  }
+
+  // A parte de uma carga distribuída sobre [a, b], decomposta em dois triângulos:
+  // cada um é uma força (F, para baixo positiva) aplicada no seu centroide.
+  // Dois triângulos, e não área e centroide do trapézio, para uma carga que troca
+  // de sinal ao longo do troço, cuja resultante é nula mas o momento não.
+  function parcelas(d, a, b) {
+    var lo = Math.max(a, d.x1), hi = Math.min(b, d.x2);
+    if (hi - lo <= TOL) return [];
+    var qa = qEm(d, lo), qb = qEm(d, hi), l = hi - lo;
+    return [{ F: qa * l / 2, x: lo + l / 3 }, { F: qb * l / 2, x: lo + 2 * l / 3 }];
+  }
+
+  function resultanteDistribuida(d) {
+    var l = d.x2 - d.x1, F = (d.q1 + d.q2) / 2 * l;
+    var x = Math.abs(d.q1 + d.q2) > 1e-12
+      ? d.x1 + l * (d.q1 + 2 * d.q2) / (3 * (d.q1 + d.q2))
+      : null;
+    return { F: F, x: x };
+  }
+
+  // ---------------------------------------------------------------- modelo
+
+  function num(v, omissao) {
+    var n = typeof v === "string" ? parseFloat(v.replace(",", ".")) : v;
+    return isFinite(n) ? n : omissao;
+  }
+
+  function normalizar(mod) {
+    var m = {
+      L: num(mod.L, 0),
+      apoios: (mod.apoios || []).map(function (a) {
+        return { id: a.id, x: num(a.x, 0), tipo: a.tipo, angulo: a.tipo === "movel" ? num(a.angulo, 0) : 0 };
+      }),
+      rotulas: (mod.rotulas || []).map(function (r) { return { id: r.id, x: num(r.x, 0) }; }),
+      forcas: (mod.forcas || []).map(function (f) { return { id: f.id, x: num(f.x, 0), F: num(f.F, 0), alfa: num(f.alfa, 270) }; }),
+      momentos: (mod.momentos || []).map(function (q) {
+        return { id: q.id, x: num(q.x, 0), M: num(q.M, 0), sentido: q.sentido === "anti-horario" ? "anti-horario" : "horario" };
+      }),
+      distribuidas: (mod.distribuidas || []).map(function (d) {
+        return { id: d.id, x1: num(d.x1, 0), x2: num(d.x2, 0), q1: num(d.q1, 0), q2: num(d.q2, num(d.q1, 0)) };
+      })
+    };
+    m.apoios.sort(function (a, b) { return a.x - b.x; });
+    m.apoios.forEach(function (a, i) { a.nome = i < LETRAS.length ? LETRAS[i] : "A" + i; });
+    m.rotulas.sort(function (a, b) { return a.x - b.x; });
+    return m;
+  }
+
+  function fmtx(x) { return x.toFixed(2).replace(".", ","); }
+
+  function validar(m) {
+    var erros = [], L = m.L;
+    if (!(L > 0)) { erros.push("O comprimento da viga tem de ser positivo."); return erros; }
+    function fora(x) { return x < -TOL || x > L + TOL; }
+    m.apoios.forEach(function (a) {
+      if (fora(a.x)) erros.push("O apoio em x = " + fmtx(a.x) + " m está fora da viga.");
+      if (["movel", "fixo", "encastramento"].indexOf(a.tipo) < 0) erros.push("Tipo de apoio desconhecido: " + a.tipo + ".");
+      if (a.tipo === "movel" && Math.abs(a.angulo) > 90 + TOL) erros.push("A reação de um apoio móvel faz com a vertical um ângulo entre -90° e 90°.");
+    });
+    for (var i = 1; i < m.apoios.length; i++)
+      if (Math.abs(m.apoios[i].x - m.apoios[i - 1].x) < TOL) erros.push("Há dois apoios em x = " + fmtx(m.apoios[i].x) + " m.");
+    m.rotulas.forEach(function (r) {
+      if (r.x <= TOL || r.x >= L - TOL) erros.push("A rótula em x = " + fmtx(r.x) + " m tem de estar no interior da viga.");
+    });
+    for (var k = 1; k < m.rotulas.length; k++)
+      if (Math.abs(m.rotulas[k].x - m.rotulas[k - 1].x) < TOL) erros.push("Há duas rótulas em x = " + fmtx(m.rotulas[k].x) + " m.");
+    m.forcas.forEach(function (f) { if (fora(f.x)) erros.push("A força em x = " + fmtx(f.x) + " m está fora da viga."); });
+    m.momentos.forEach(function (q) { if (fora(q.x)) erros.push("O momento em x = " + fmtx(q.x) + " m está fora da viga."); });
+    m.distribuidas.forEach(function (d) {
+      if (fora(d.x1) || fora(d.x2)) erros.push("A carga distribuída de " + fmtx(d.x1) + " a " + fmtx(d.x2) + " m sai da viga.");
+      if (d.x2 - d.x1 <= TOL) erros.push("Numa carga distribuída, o fim tem de estar à direita do início.");
+    });
+    return erros;
+  }
+
+  // ---------------------------------------------------------------- classificação
+
+  // Parte-se a viga nas rótulas. Incógnitas: as reações e as duas forças de
+  // ligação de cada rótula. Três equações de equilíbrio por peça (ΣFx, ΣFy e
+  // ΣM em relação à origem).
+  function equilibrioDasPecas(m) {
+    var hx = m.rotulas.map(function (r) { return r.x; });
+    var e = hx.length, p = e + 1, nl = 3 * p;
+    function peca(x) { var k = 0; while (k < e && hx[k] < x - TOL) k++; return k; }
+    function limites(j) { return [j === 0 ? 0 : hx[j - 1], j === e ? m.L : hx[j]]; }
+
+    var cols = [];
+    m.apoios.forEach(function (a, i) {
+      var r0 = 3 * peca(a.x);
+      if (a.tipo === "movel") {
+        var d = direcaoMovel(a.angulo);
+        cols.push({ apoio: i, comp: "R", e: [[r0, d.cx], [r0 + 1, d.cy], [r0 + 2, a.x * d.cy]] });
+      } else {
+        cols.push({ apoio: i, comp: "H", e: [[r0, 1]] });
+        cols.push({ apoio: i, comp: "V", e: [[r0 + 1, 1], [r0 + 2, a.x]] });
+        if (a.tipo === "encastramento") cols.push({ apoio: i, comp: "M", e: [[r0 + 2, 1]] });
+      }
+    });
+    var r = cols.length;
+    hx.forEach(function (x, k) {
+      var a0 = 3 * k, b0 = 3 * (k + 1);
+      cols.push({ rotula: k, comp: "H", e: [[a0, 1], [b0, -1]] });
+      cols.push({ rotula: k, comp: "V", e: [[a0 + 1, 1], [a0 + 2, x], [b0 + 1, -1], [b0 + 2, -x]] });
+    });
+
+    var A = matriz(nl, cols.length);
+    cols.forEach(function (c, k) { c.e.forEach(function (t) { A[t[0]][k] += t[1]; }); });
+
+    // segundo membro: menos a soma das ações em cada peça
+    var b = zeros(nl);
+    m.forcas.forEach(function (f) {
+      var c = componentesForca(f), j = 3 * peca(f.x);
+      b[j] -= c.Fx; b[j + 1] -= c.Fy; b[j + 2] -= f.x * c.Fy;
+    });
+    m.momentos.forEach(function (q) { b[3 * peca(q.x) + 2] -= momentoAntiHorario(q); });
+    m.distribuidas.forEach(function (d) {
+      for (var j = 0; j < p; j++) {
+        var lim = limites(j);
+        parcelas(d, lim[0], lim[1]).forEach(function (pc) {
+          b[3 * j + 1] += pc.F; b[3 * j + 2] += pc.F * pc.x;
+        });
+      }
+    });
+    return { A: A, b: b, cols: cols, r: r, e: e, p: p, nl: nl };
+  }
+
+  function classificar(m) {
+    var eq = equilibrioDasPecas(m);
+    var rho = posto(eq.A);
+    var g = eq.r - 3 - eq.e;
+    var horizontal = eq.cols.some(function (c) {
+      return c.apoio !== undefined && c.e.some(function (t) { return t[0] % 3 === 0 && Math.abs(t[1]) > 1e-12; });
+    });
+    var tipo, motivo = "";
+    if (rho < eq.nl) {
+      tipo = "hipostatica";
+      if (eq.r === 0) motivo = "Não há apoios.";
+      else if (g < 0) motivo = "Faltam ligações: a contagem dá g = " + g + ".";
+      else if (!horizontal) motivo = "A contagem dá g = " + g + ", mas nenhum apoio impede o movimento horizontal.";
+      else motivo = "A contagem dá g = " + g + ", mas os vínculos estão mal dispostos: há um movimento que nenhum deles impede.";
+    } else if (g === 0) {
+      tipo = "isostatica";
+    } else {
+      tipo = "hiperestatica";
+    }
+    return {
+      tipo: tipo, r: eq.r, e: eq.e, p: eq.p, g: g, posto: rho, equacoes: eq.nl,
+      malDispostos: tipo === "hipostatica" && g >= 0, semHorizontal: !horizontal,
+      motivo: motivo, _eq: eq
+    };
+  }
+
+  // ---------------------------------------------------------------- reações
+
+  function reacaoVazia(a) {
+    return { id: a.id, nome: a.nome, x: a.x, tipo: a.tipo, angulo: a.angulo, H: 0, V: 0, M: 0, R: 0 };
+  }
+
+  function reacoesPorEquilibrio(m, cls) {
+    var eq = cls._eq;
+    var u = resolverSistema(eq.A, eq.b);
+    if (!u) return null;
+    var reac = m.apoios.map(reacaoVazia);
+    eq.cols.forEach(function (c, k) {
+      if (c.apoio === undefined) return;
+      var R = reac[c.apoio];
+      if (c.comp === "R") {
+        var d = direcaoMovel(R.angulo);
+        R.R = u[k]; R.H = u[k] * d.cx; R.V = u[k] * d.cy;
+      } else R[c.comp] = u[k];
+    });
+    return reac;
+  }
+
+  // Matriz de rigidez de flexão de um elemento (Euler-Bernoulli, EI = 1).
+  function ke(L) {
+    var c = 1 / (L * L * L);
+    return [
+      [12 * c, 6 * L * c, -12 * c, 6 * L * c],
+      [6 * L * c, 4 * L * L * c, -6 * L * c, 2 * L * L * c],
+      [-12 * c, -6 * L * c, 12 * c, -6 * L * c],
+      [6 * L * c, 2 * L * L * c, -6 * L * c, 4 * L * L * c]
+    ];
+  }
+
+  // Forças nodais equivalentes de uma carga trapezoidal (para baixo positiva) sobre
+  // [a, b] dentro de um elemento [0, L]: integra as funções de forma de Hermite.
+  // Gauss de 5 pontos: exato para este integrando (grau 4).
+  var GP = [-0.906179845938664, -0.538469310105683, 0, 0.538469310105683, 0.906179845938664];
+  var GW = [0.236926885056189, 0.478628670499366, 0.568888888888889, 0.478628670499366, 0.236926885056189];
+
+  function fefTrapezio(w0, w1, a, b, L) {
+    var vao = b - a, fef = [0, 0, 0, 0];
+    if (vao < 1e-12) return fef;
+    for (var k = 0; k < 5; k++) {
+      var s = a + vao * (GP[k] + 1) / 2, ds = vao / 2;
+      var w = w0 + (w1 - w0) * (s - a) / vao, t = s / L;
+      var N1 = 1 - 3 * t * t + 2 * t * t * t;
+      var N2 = s * (1 - t) * (1 - t);
+      var N3 = 3 * t * t - 2 * t * t * t;
+      var N4 = s * s / L * (t - 1);
+      fef[0] -= w * N1 * GW[k] * ds;
+      fef[1] -= w * N2 * GW[k] * ds;
+      fef[2] -= w * N3 * GW[k] * ds;
+      fef[3] -= w * N4 * GW[k] * ds;
+    }
+    return fef;
+  }
+
+  function reacoesPorRigidez(m) {
+    var L = m.L;
+    var xs = [0, L];
+    m.apoios.forEach(function (a) { xs.push(a.x); });
+    m.rotulas.forEach(function (r) { xs.push(r.x); });
+    m.forcas.forEach(function (f) { xs.push(f.x); });
+    m.momentos.forEach(function (q) { xs.push(q.x); });
+    m.distribuidas.forEach(function (d) { xs.push(d.x1, d.x2); });
+    xs.sort(function (a, b) { return a - b; });
+    var nos = [];
+    xs.forEach(function (x) { if (!nos.length || x - nos[nos.length - 1] > TOL) nos.push(x); });
+    var nn = nos.length;
+    function no(x) {
+      for (var i = 0; i < nn; i++) if (Math.abs(nos[i] - x) <= TOL) return i;
+      return -1;
+    }
+    // graus de liberdade: (u, v, θ) por nó; numa rótula, uma rotação a mais,
+    // que é a da peça à direita
+    var extra = {};
+    m.rotulas.forEach(function (r, k) { extra[no(r.x)] = 3 * nn + k; });
+    var ndof = 3 * nn + m.rotulas.length;
+    var EA = 1e6 / (L * L);
+
+    var K = matriz(ndof, ndof), f = zeros(ndof);
+    for (var e = 0; e < nn - 1; e++) {
+      var xi = nos[e], xj = nos[e + 1], Le = xj - xi;
+      var thi = extra[e] !== undefined ? extra[e] : 3 * e + 2;
+      var dofs = [3 * e + 1, thi, 3 * (e + 1) + 1, 3 * (e + 1) + 2];
+      var k4 = ke(Le);
+      for (var a = 0; a < 4; a++) for (var b = 0; b < 4; b++) K[dofs[a]][dofs[b]] += k4[a][b];
+      var ka = EA / Le, ua = 3 * e, ub = 3 * (e + 1);
+      K[ua][ua] += ka; K[ub][ub] += ka; K[ua][ub] -= ka; K[ub][ua] -= ka;
+      m.distribuidas.forEach(function (d) {
+        var lo = Math.max(d.x1, xi), hi = Math.min(d.x2, xj);
+        if (hi - lo <= TOL) return;
+        var fe = fefTrapezio(qEm(d, lo), qEm(d, hi), lo - xi, hi - xi, Le);
+        for (var c = 0; c < 4; c++) f[dofs[c]] += fe[c];
+      });
+    }
+    m.forcas.forEach(function (fo) {
+      var c = componentesForca(fo), i = no(fo.x);
+      f[3 * i] += c.Fx; f[3 * i + 1] += c.Fy;
+    });
+    m.momentos.forEach(function (q) { f[3 * no(q.x) + 2] += momentoAntiHorario(q); });
+
+    // apoios por multiplicadores de Lagrange: [K Cᵀ; C 0]
+    var linhas = [];
+    m.apoios.forEach(function (a, ia) {
+      var i = no(a.x);
+      if (a.tipo === "movel") {
+        var d = direcaoMovel(a.angulo), l = {};
+        if (d.cx) l[3 * i] = d.cx;
+        if (d.cy) l[3 * i + 1] = d.cy;
+        linhas.push({ apoio: ia, comp: "R", c: l });
+      } else {
+        var lh = {}, lv = {}; lh[3 * i] = 1; lv[3 * i + 1] = 1;
+        linhas.push({ apoio: ia, comp: "H", c: lh });
+        linhas.push({ apoio: ia, comp: "V", c: lv });
+        if (a.tipo === "encastramento") { var lm = {}; lm[3 * i + 2] = 1; linhas.push({ apoio: ia, comp: "M", c: lm }); }
+      }
+    });
+    var nc = linhas.length, n = ndof + nc;
+    var S = matriz(n, n), rhs = zeros(n);
+    for (var p = 0; p < ndof; p++) { for (var q = 0; q < ndof; q++) S[p][q] = K[p][q]; rhs[p] = f[p]; }
+    linhas.forEach(function (l, k) {
+      Object.keys(l.c).forEach(function (dof) {
+        S[ndof + k][+dof] = l.c[dof];
+        S[+dof][ndof + k] = l.c[dof];
+      });
+    });
+    var sol = resolverSistema(S, rhs);
+    if (!sol) return null;
+
+    var reac = m.apoios.map(reacaoVazia);
+    linhas.forEach(function (l, k) {
+      var R = reac[l.apoio], val = -sol[ndof + k];
+      if (l.comp === "R") {
+        var d = direcaoMovel(R.angulo);
+        R.R = val; R.H = val * d.cx; R.V = val * d.cy;
+      } else R[l.comp] = val;
+    });
+    return reac;
+  }
+
+  // ---------------------------------------------------------------- esforços
+
+  function acoesConcentradas(m, reac) {
+    var ac = [];
+    reac.forEach(function (r) { ac.push({ x: r.x, Fx: r.H, Fy: r.V, M: r.M }); });
+    m.forcas.forEach(function (f) { var c = componentesForca(f); ac.push({ x: f.x, Fx: c.Fx, Fy: c.Fy, M: 0 }); });
+    m.momentos.forEach(function (q) { ac.push({ x: q.x, Fx: 0, Fy: 0, M: momentoAntiHorario(q) }); });
+    return ac;
+  }
+
+  // Esforços na secção x, pelo equilíbrio da parte à esquerda.
+  // lado = "esq": imediatamente à esquerda de x; "dir" (por omissão): à direita.
+  function fazerEsforcos(m, ac) {
+    return function (x, lado) {
+      var dir = lado !== "esq", N = 0, V = 0, M = 0;
+      for (var i = 0; i < ac.length; i++) {
+        var a = ac[i];
+        if (dir ? a.x <= x + TOL : a.x < x - TOL) {
+          N -= a.Fx; V += a.Fy; M += a.Fy * (x - a.x) - a.M;
+        }
+      }
+      for (var k = 0; k < m.distribuidas.length; k++) {
+        var d = m.distribuidas[k];
+        if (x > d.x1 + TOL) {
+          var pc = parcelas(d, d.x1, Math.min(x, d.x2));
+          for (var j = 0; j < pc.length; j++) { V -= pc[j].F; M -= pc[j].F * (x - pc[j].x); }
+        }
+      }
+      return { N: N, V: V, M: M };
+    };
+  }
+
+  function posicoesNotaveis(m) {
+    var lista = [];
+    function junta(x, motivo) {
+      for (var i = 0; i < lista.length; i++)
+        if (Math.abs(lista[i].x - x) <= TOL) { if (lista[i].motivos.indexOf(motivo) < 0) lista[i].motivos.push(motivo); return; }
+      lista.push({ x: x, motivos: [motivo] });
+    }
+    junta(0, "extremidade"); junta(m.L, "extremidade");
+    m.apoios.forEach(function (a) { junta(a.x, "apoio " + a.nome); });
+    m.rotulas.forEach(function (r) { junta(r.x, "rótula"); });
+    m.forcas.forEach(function (f) { junta(f.x, "força"); });
+    m.momentos.forEach(function (q) { junta(q.x, "momento"); });
+    m.distribuidas.forEach(function (d) { junta(d.x1, "início de carga"); junta(d.x2, "fim de carga"); });
+    lista.sort(function (a, b) { return a.x - b.x; });
+    lista.forEach(function (p) {
+      // se há um apoio, é ele que dá o nome ao ponto
+      var ap = p.motivos.filter(function (t) { return t.indexOf("apoio ") === 0; });
+      var outros = p.motivos.filter(function (t) { return t.indexOf("apoio ") !== 0 && t !== "extremidade"; });
+      p.nome = ap.length ? ap[0].slice(6) : "";
+      p.descricao = (ap.length ? ["apoio " + p.nome] : []).concat(outros).join(", ") || "extremidade";
+    });
+    return lista;
+  }
+
+  function quaseIgual(a, b, escala) { return Math.abs(a - b) <= 1e-9 * Math.max(1, escala); }
+
+  // Zeros de V num troço sem pontos notáveis no interior: V é aí um polinómio de
+  // grau ≤ 2 (carga linear), que fica definido por três valores.
+  function zerosV(esf, a, b, escala) {
+    var V0 = esf(a, "dir").V, Vm = esf((a + b) / 2).V, V1 = esf(b, "esq").V;
+    var c0 = V0, c2 = 2 * (V1 - 2 * Vm + V0), c1 = V1 - V0 - c2;
+    var tol = 1e-9 * Math.max(1, escala), ts = [];
+    if (Math.abs(c0) <= tol && Math.abs(c1) <= tol && Math.abs(c2) <= tol) return [];
+    if (Math.abs(c2) <= tol) {
+      if (Math.abs(c1) > tol) ts.push(-c0 / c1);
+    } else {
+      var disc = c1 * c1 - 4 * c2 * c0;
+      if (disc >= 0) {
+        var s = Math.sqrt(disc);
+        ts.push((-c1 - s) / (2 * c2), (-c1 + s) / (2 * c2));
+      }
+    }
+    ts.sort(function (p, q) { return p - q; });
+    return ts.filter(function (t, i) { return t > 1e-7 && t < 1 - 1e-7 && (i === 0 || t - ts[i - 1] > 1e-9); })
+      .map(function (t) { return a + t * (b - a); });
+  }
+
+  // Zeros de M no interior de um troço (M é aí um polinómio de grau ≤ 3).
+  function zerosM(esf, a, b, escala) {
+    var n = 64, tol = 1e-9 * Math.max(1, escala), out = [];
+    function Mx(x) { return x <= a ? esf(a, "dir").M : x >= b ? esf(b, "esq").M : esf(x).M; }
+    var xs = [], ms = [];
+    for (var i = 0; i <= n; i++) { var x = a + (b - a) * i / n; xs.push(x); ms.push(Mx(x)); }
+    if (ms.every(function (v) { return Math.abs(v) <= tol; })) return [];
+    for (var k = 0; k < n; k++) {
+      var m0 = ms[k], m1 = ms[k + 1];
+      if (Math.abs(m0) <= tol) {
+        if (k > 0 && Math.abs(ms[k - 1]) > tol && Math.abs(m1) > tol) out.push(xs[k]);
+        continue;
+      }
+      if (Math.abs(m1) <= tol || (m0 < 0) === (m1 < 0)) continue;
+      var lo = xs[k], hi = xs[k + 1];
+      for (var it = 0; it < 80; it++) {
+        var mid = (lo + hi) / 2, mm = Mx(mid);
+        if ((mm < 0) === (m0 < 0)) lo = mid; else hi = mid;
+      }
+      out.push((lo + hi) / 2);
+    }
+    return out.filter(function (x) { return x > a + 1e-7 * (b - a) && x < b - 1e-7 * (b - a); });
+  }
+
+  // ---------------------------------------------------------------- resolver
+
+  function resolver(modelo) {
+    var m = normalizar(modelo);
+    var erros = validar(m);
+    var res = { modelo: m, erros: erros };
+    if (erros.length) return res;
+
+    var cls = classificar(m);
+    res.classificacao = cls;
+    res.resultantes = m.distribuidas.map(resultanteDistribuida);
+    if (cls.tipo === "hipostatica") return res;
+
+    var reac = cls.tipo === "isostatica" ? reacoesPorEquilibrio(m, cls) : reacoesPorRigidez(m);
+    if (!reac) {
+      cls.tipo = "hipostatica";
+      cls.motivo = "O sistema de equações é singular: os vínculos não impedem todos os movimentos.";
+      return res;
+    }
+
+    // escala das ações, para as tolerâncias
+    var escala = 1;
+    m.forcas.forEach(function (f) { escala = Math.max(escala, Math.abs(f.F)); });
+    m.momentos.forEach(function (q) { escala = Math.max(escala, Math.abs(q.M) / m.L); });
+    m.distribuidas.forEach(function (d) { escala = Math.max(escala, Math.abs(d.q1) * m.L, Math.abs(d.q2) * m.L); });
+    var escalaM = escala * m.L;
+
+    reac.forEach(function (r) {
+      ["H", "V", "M", "R"].forEach(function (k) { r[k] = limpa(r[k], k === "M" ? escalaM * 1e3 : escala * 1e3); });
+    });
+    res.reacoes = reac;
+    var ac = acoesConcentradas(m, reac);
+    var esf = fazerEsforcos(m, ac);
+    function esfLimpo(x, lado) {
+      var v = esf(x, lado);
+      return { N: limpa(v.N, escala * 1e3), V: limpa(v.V, escala * 1e3), M: limpa(v.M, escalaM * 1e3) };
+    }
+    res.esforcos = esfLimpo;
+
+    // pontos notáveis, com os valores à esquerda e à direita
+    var pos = posicoesNotaveis(m);
+    pos.forEach(function (p) {
+      p.esq = esfLimpo(p.x, "esq");
+      p.dir = esfLimpo(p.x, "dir");
+      p.salto = !(quaseIgual(p.esq.N, p.dir.N, escala) && quaseIgual(p.esq.V, p.dir.V, escala) && quaseIgual(p.esq.M, p.dir.M, escalaM));
+    });
+    res.pontos = pos;
+
+    // extremos de M (V = 0) e zeros de M, troço a troço
+    var extremos = [], nulos = [];
+    for (var i = 0; i < pos.length - 1; i++) {
+      var a = pos[i].x, b = pos[i + 1].x;
+      zerosV(esf, a, b, escala).forEach(function (x) { extremos.push({ x: x, M: esfLimpo(x).M }); });
+      zerosM(esf, a, b, escalaM).forEach(function (x) { nulos.push(x); });
+    }
+    res.extremos = extremos;
+    res.zerosM = nulos;
+
+    // amostragem dos diagramas: os saltos ficam na vertical
+    var pts = [];
+    function empurra(x, v) { pts.push({ x: x, N: v.N, V: v.V, M: v.M }); }
+    for (var k = 0; k < pos.length; k++) {
+      empurra(pos[k].x, pos[k].esq);
+      empurra(pos[k].x, pos[k].dir);
+      if (k === pos.length - 1) break;
+      var x0 = pos[k].x, x1 = pos[k + 1].x;
+      var interiores = [];
+      var n = Math.max(24, Math.ceil(120 * (x1 - x0) / m.L));
+      for (var s = 1; s < n; s++) interiores.push(x0 + (x1 - x0) * s / n);
+      extremos.concat(nulos.map(function (x) { return { x: x }; })).forEach(function (e) {
+        if (e.x > x0 && e.x < x1) interiores.push(e.x);
+      });
+      interiores.sort(function (p1, p2) { return p1 - p2; }).forEach(function (x) { empurra(x, esfLimpo(x)); });
+    }
+    res.diagrama = pts;
+
+    // máximos e mínimos
+    function extremo(chave, sinal) {
+      var melhor = null;
+      pts.forEach(function (p) {
+        var v = p[chave] * sinal;
+        if (melhor === null || v > melhor.v + 1e-12) melhor = { v: v, x: p.x, valor: p[chave] };
+      });
+      return melhor && melhor.valor * sinal > 0 ? { x: melhor.x, valor: melhor.valor } : null;
+    }
+    res.maximos = {
+      Nmax: extremo("N", 1), Nmin: extremo("N", -1),
+      Vmax: extremo("V", 1), Vmin: extremo("V", -1),
+      Mmax: extremo("M", 1), Mmin: extremo("M", -1)
+    };
+
+    // verificação do equilíbrio global, com momentos em relação ao primeiro apoio
+    var xr = m.apoios.length ? m.apoios[0].x : 0, Fx = 0, Fy = 0, Mr = 0;
+    ac.forEach(function (a) { Fx += a.Fx; Fy += a.Fy; Mr += a.Fy * (a.x - xr) + a.M; });
+    m.distribuidas.forEach(function (d) {
+      parcelas(d, d.x1, d.x2).forEach(function (pc) { Fy -= pc.F; Mr -= pc.F * (pc.x - xr); });
+    });
+    res.equilibrio = { Fx: limpa(Fx, escala * 1e3), Fy: limpa(Fy, escala * 1e3), M: limpa(Mr, escalaM * 1e3), xRef: xr,
+                       ref: m.apoios.length ? m.apoios[0].nome : "O" };
+    return res;
+  }
+
+  global.Solver = {
+    resolver: resolver,
+    componentesForca: componentesForca,
+    direcaoMovel: direcaoMovel,
+    resultanteDistribuida: resultanteDistribuida,
+    normalizar: normalizar,
+    TOL: TOL
+  };
+})(typeof window !== "undefined" ? window : this);
+
+</script>
+<script>
+/* Diagramas de Esforços — interface.
+ *
+ * Desenho em SVG: o modelo da viga em cima e os diagramas de N, V e M por baixo,
+ * com o mesmo eixo x. Cada alteração volta a resolver a viga e a desenhar tudo.
+ */
+(function () {
+  "use strict";
+  var S = window.Solver;
+
+  var COR = {
+    azul: "#12344F", dourado: "#FCC000", carga: "#C62828", cargaClaro: "#F9DEDE",
+    reacao: "#1E7B34", tracao: "#C62828", tracaoClaro: "#F7D7D7", compressao: "#2E6DA4",
+    compressaoClaro: "#D5E4F2", preenche: "#DCE4EC", cinza: "#7B8794", guia: "#E4E9EE",
+    texto: "#1F2933"
+  };
+  var FONTE = "Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif";
+  var TIPOS = ["apoios", "rotulas", "forcas", "momentos", "distribuidas"];
+  var CHAVE_LOCAL = "est-diagramas-esforcos-v1";
+  var NOME_APOIO = { movel: "Apoio móvel", fixo: "Apoio fixo", encastramento: "Encastramento" };
+
+  // ------------------------------------------------------------ formatação
+
+  function fmt(v, casas) {
+    if (casas === undefined) casas = 2;
+    if (v === null || v === undefined || !isFinite(v)) return "—";
+    if (Math.abs(v) < 0.5 * Math.pow(10, -casas)) v = 0;
+    return v.toFixed(casas).replace(".", ",");
+  }
+  function fmtAng(a) {
+    var t = Math.round(a * 100) / 100;
+    return (t % 1 === 0 ? t.toFixed(0) : fmt(t, 2)) + "°";
+  }
+  function lerNum(s) {
+    if (typeof s === "number") return s;
+    s = String(s).trim().replace(/\s/g, "").replace(",", ".").replace("−", "-");
+    if (!/^[-+]?(\d+\.?\d*|\.\d+)$/.test(s)) return NaN;
+    return parseFloat(s);
+  }
+  function esc(t) {
+    return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function $(id) { return document.getElementById(id); }
+  function r1(v) { return Math.round(v * 10) / 10; }
+  function arred(x) { return Math.round(x * 1e6) / 1e6; }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  // índice em HTML: R<sub>Av</sub>
+  function nomeHtml(base, ind) { return esc(base) + "<sub>" + esc(ind) + "</sub>"; }
+  // índice em SVG
+  function nomeSvg(base, ind, resto) {
+    return esc(base) + '<tspan dy="3.5" font-size="78%">' + esc(ind) + '</tspan><tspan dy="-3.5">' + resto + "</tspan>";
+  }
+
+  // ------------------------------------------------------------ forças: ângulos
+
+  function angulosDeAlfa(alfa) {
+    var a = ((alfa % 360) + 360) % 360, rr = a * Math.PI / 180;
+    var cx = Math.cos(rr), cy = Math.sin(rr);
+    if (Math.abs(cx) < 1e-9) cx = 0;
+    if (Math.abs(cy) < 1e-9) cy = 0;
+    var th = Math.atan2(Math.abs(cy), Math.abs(cx)) * 180 / Math.PI;
+    return { theta: Math.round(th * 1e6) / 1e6, sh: cx < 0 ? "esq" : "dir", sv: cy > 0 ? "cima" : "baixo" };
+  }
+  function alfaDeAngulos(theta, sh, sv) {
+    var a;
+    if (sh === "dir" && sv === "baixo") a = 360 - theta;
+    else if (sh === "esq" && sv === "baixo") a = 180 + theta;
+    else if (sh === "dir") a = theta;
+    else a = 180 - theta;
+    return arred(((a % 360) + 360) % 360);
+  }
+  function descreverDirecao(alfa) {
+    var g = angulosDeAlfa(alfa);
+    if (Math.abs(g.theta - 90) < 1e-6) return g.sv === "baixo" ? "vertical ↓" : "vertical ↑";
+    if (g.theta < 1e-6) return g.sh === "dir" ? "horizontal →" : "horizontal ←";
+    var s = { "dir-baixo": "↘", "esq-baixo": "↙", "dir-cima": "↗", "esq-cima": "↖" }[g.sh + "-" + g.sv];
+    return "a " + fmtAng(g.theta) + " com a horizontal " + s;
+  }
+
+  // ------------------------------------------------------------ exemplos
+
+  var EXEMPLOS = [
+    { chave: "simples", nome: "Viga simplesmente apoiada", desc: "Carga uniforme num vão de 6,00 m",
+      modelo: { L: 6, apoios: [{ x: 0, tipo: "fixo" }, { x: 6, tipo: "movel" }], distribuidas: [{ x1: 0, x2: 6, q1: 10, q2: 10 }] } },
+    { chave: "consola", nome: "Consola", desc: "Encastrada, com uma força na extremidade livre",
+      modelo: { L: 3, apoios: [{ x: 0, tipo: "encastramento" }], forcas: [{ x: 3, F: 20, alfa: 270 }] } },
+    { chave: "balanco", nome: "Viga com consola", desc: "Vão de 6,00 m e consola de 2,00 m",
+      modelo: { L: 8, apoios: [{ x: 0, tipo: "fixo" }, { x: 6, tipo: "movel" }], forcas: [{ x: 8, F: 15, alfa: 270 }],
+                distribuidas: [{ x1: 0, x2: 8, q1: 10, q2: 10 }] } },
+    { chave: "triangular", nome: "Carga triangular", desc: "De 0 a 18 kN/m num vão de 6,00 m",
+      modelo: { L: 6, apoios: [{ x: 0, tipo: "fixo" }, { x: 6, tipo: "movel" }], distribuidas: [{ x1: 0, x2: 6, q1: 0, q2: 18 }] } },
+    { chave: "inclinada", nome: "Força inclinada e momento", desc: "25 kN a 45° e um momento de 20 kN·m",
+      modelo: { L: 6, apoios: [{ x: 0, tipo: "fixo" }, { x: 6, tipo: "movel" }], forcas: [{ x: 2, F: 25, alfa: 315 }],
+                momentos: [{ x: 4.5, M: 20, sentido: "horario" }] } },
+    { chave: "rotula", nome: "Viga com rótula", desc: "Encastramento, rótula e apoio móvel",
+      modelo: { L: 10, apoios: [{ x: 0, tipo: "encastramento" }, { x: 10, tipo: "movel" }], rotulas: [{ x: 4 }],
+                distribuidas: [{ x1: 0, x2: 10, q1: 8, q2: 8 }] } },
+    { chave: "continua", nome: "Viga contínua (hiperestática)", desc: "Dois tramos de 5,00 m",
+      modelo: { L: 10, apoios: [{ x: 0, tipo: "fixo" }, { x: 5, tipo: "movel" }, { x: 10, tipo: "movel" }],
+                distribuidas: [{ x1: 0, x2: 10, q1: 12, q2: 12 }] } }
+  ];
+
+  // ------------------------------------------------------------ estado
+
+  var est = {
+    modelo: null, proximoId: 1, ferramenta: "selecionar", grelha: 0.1, valores: true,
+    sel: null, seccao: null, hist: [], fut: [], res: null, geo: null,
+    arrasto: null, previa: null, ultimo: {}, dialogo: false, temporizador: null
+  };
+
+  function vazio(L) { return { L: L || 6, apoios: [], rotulas: [], forcas: [], momentos: [], distribuidas: [] }; }
+
+  function comIds(mod) {
+    var m = vazio(lerNum(mod.L) > 0 ? lerNum(mod.L) : 6);
+    TIPOS.forEach(function (k) {
+      (mod[k] || []).forEach(function (e) {
+        var c = {};
+        Object.keys(e).forEach(function (q) {
+          if (q === "id" || q === "nome") return;
+          var v = e[q];
+          c[q] = q === "tipo" || q === "sentido" ? v : lerNum(v);
+        });
+        c.id = est.proximoId++;
+        m[k].push(c);
+      });
+    });
+    m.apoios.forEach(function (a) { if (a.tipo === "movel" && a.angulo === undefined) a.angulo = 0; });
+    m.distribuidas.forEach(function (d) { if (d.q2 === undefined) d.q2 = d.q1; });
+    return m;
+  }
+
+  function semIds(mod) {
+    var m = { L: mod.L };
+    TIPOS.forEach(function (k) {
+      m[k] = mod[k].map(function (e) {
+        var c = {};
+        Object.keys(e).forEach(function (q) { if (q !== "id") c[q] = e[q]; });
+        return c;
+      });
+    });
+    return m;
+  }
+
+  function acharElemento(k, id) {
+    var lista = est.modelo[k] || [];
+    for (var i = 0; i < lista.length; i++) if (lista[i].id === id) return lista[i];
+    return null;
+  }
+
+  function guardarHistorico() {
+    est.hist.push(JSON.stringify(est.modelo));
+    if (est.hist.length > 200) est.hist.shift();
+    est.fut = [];
+  }
+
+  function alterar(fn) {
+    guardarHistorico();
+    fn(est.modelo);
+    atualizar();
+  }
+
+  function desfazer() {
+    if (!est.hist.length) return;
+    est.fut.push(JSON.stringify(est.modelo));
+    est.modelo = JSON.parse(est.hist.pop());
+    depoisDeRepor();
+  }
+
+  function refazer() {
+    if (!est.fut.length) return;
+    est.hist.push(JSON.stringify(est.modelo));
+    est.modelo = JSON.parse(est.fut.pop());
+    depoisDeRepor();
+  }
+
+  function depoisDeRepor() {
+    if (est.sel && !acharElemento(est.sel.k, est.sel.id)) est.sel = null;
+    $("comprimento").value = fmt(est.modelo.L);
+    atualizar();
+  }
+
+  function carregarModelo(mod, comHistorico) {
+    if (comHistorico) guardarHistorico();
+    est.modelo = comIds(mod);
+    est.sel = null;
+    est.seccao = null;
+    $("comprimento").value = fmt(est.modelo.L);
+    atualizar();
+  }
+
+  function guardarLocal() {
+    try {
+      localStorage.setItem(CHAVE_LOCAL, JSON.stringify({ modelo: semIds(est.modelo), grelha: est.grelha, valores: est.valores }));
+    } catch (e) { /* sem armazenamento: não faz mal */ }
+  }
+
+  function lerLocal() {
+    try {
+      var t = localStorage.getItem(CHAVE_LOCAL);
+      return t ? JSON.parse(t) : null;
+    } catch (e) { return null; }
+  }
+
+  // ------------------------------------------------------------ cálculo e desenho
+
+  var pedido = null;
+  function agendar() {
+    if (pedido) return;
+    pedido = requestAnimationFrame(function () { pedido = null; desenhar(); painel(); });
+  }
+
+  function atualizar() {
+    est.res = S.resolver(est.modelo);
+    guardarLocal();
+    desenhar();
+    painel();
+    atualizarBotoes();
+  }
+
+  function recalcular() {
+    est.res = S.resolver(est.modelo);
+    agendar();
+  }
+
+  function geometria() {
+    var area = $("area-desenho");
+    var Hd = Math.max(520, Math.floor(area.clientHeight) - 4);
+    var hM = Math.max(250, Math.round(Hd * 0.4));
+    var hD = Math.max(90, Math.floor((Hd - hM) / 3));
+    // se o desenho não couber na altura, aparece a barra de deslocamento: descontá-la
+    var barra = hM + 3 * hD > area.clientHeight ? 18 : 0;
+    var W = Math.max(640, Math.floor(area.clientWidth) - barra);
+    var ml = 96, mr = 48, L = est.modelo.L;
+    var sx = (W - ml - mr) / L;
+    // por baixo da viga: apoios, reações (até três linhas de rótulos) e cotas
+    var g = { W: W, ml: ml, mr: mr, sx: sx, L: L, hM: hM, hD: hD, y0: hM - 136 };
+    g.H = hM + 3 * hD;
+    g.X = function (x) { return ml + x * sx; };
+    g.xDe = function (px) { return (px - ml) / sx; };
+    g.paineis = [
+      { k: "N", top: hM, h: hD, nome: "N", unidade: "kN", nota: "tração +" },
+      { k: "V", top: hM + hD, h: hD, nome: "V", unidade: "kN", nota: "" },
+      { k: "M", top: hM + 2 * hD, h: hD, nome: "M", unidade: "kN·m", nota: "lado tracionado" }
+    ];
+    return g;
+  }
+
+  // ---- primitivas SVG
+
+  function linha(x1, y1, x2, y2, cor, esp, extra) {
+    return '<line x1="' + r1(x1) + '" y1="' + r1(y1) + '" x2="' + r1(x2) + '" y2="' + r1(y2) +
+      '" stroke="' + cor + '" stroke-width="' + esp + '"' + (extra || "") + "/>";
+  }
+
+  function seta(x1, y1, x2, y2, cor, esp, tracejado) {
+    var dx = x2 - x1, dy = y2 - y1, l = Math.hypot(dx, dy);
+    if (l < 1e-6) return "";
+    var ux = dx / l, uy = dy / l, c = Math.min(10, l * 0.5), w = c * 0.42 + esp * 0.4;
+    var bx = x2 - ux * c, by = y2 - uy * c;
+    return linha(x1, y1, bx, by, cor, esp, tracejado ? ' stroke-dasharray="4 3"' : "") +
+      '<polygon points="' + r1(x2) + "," + r1(y2) + " " + r1(bx - uy * w) + "," + r1(by + ux * w) + " " +
+      r1(bx + uy * w) + "," + r1(by - ux * w) + '" fill="' + cor + '"/>';
+  }
+
+  // arco de (cx, cy), ângulos de ecrã em graus (y para baixo: a crescer = horário), com seta no fim
+  function arco(cx, cy, raio, th0, th1, cor, esp, ponta) {
+    var sg = th1 > th0 ? 1 : -1, c = ponta || 9, w = c * 0.49;
+    var dth = (c * 0.85 / raio) * 180 / Math.PI * sg;
+    var n = 30, pts = [];
+    for (var i = 0; i <= n; i++) {
+      var t = (th0 + (th1 - dth - th0) * i / n) * Math.PI / 180;
+      pts.push(r1(cx + raio * Math.cos(t)) + "," + r1(cy + raio * Math.sin(t)));
+    }
+    var te = th1 * Math.PI / 180;
+    var ex = cx + raio * Math.cos(te), ey = cy + raio * Math.sin(te);
+    var ux = -Math.sin(te) * sg, uy = Math.cos(te) * sg;
+    var bx = ex - ux * c, by = ey - uy * c;
+    return '<polyline fill="none" stroke="' + cor + '" stroke-width="' + esp + '" points="' + pts.join(" ") + '"/>' +
+      '<polygon points="' + r1(ex) + "," + r1(ey) + " " + r1(bx - uy * w) + "," + r1(by + ux * w) + " " +
+      r1(bx + uy * w) + "," + r1(by - ux * w) + '" fill="' + cor + '"/>';
+  }
+
+  function texto(x, y, t, o) {
+    o = o || {};
+    return '<text x="' + r1(x) + '" y="' + r1(y) + '" font-size="' + (o.tam || 12) + '" fill="' + (o.cor || COR.texto) +
+      '" text-anchor="' + (o.ancora || "middle") + '"' + (o.peso ? ' font-weight="' + o.peso + '"' : "") +
+      (o.halo ? ' stroke="#fff" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke"' : "") +
+      (o.estilo ? ' font-style="' + o.estilo + '"' : "") + ">" + t + "</text>";
+  }
+
+  function larguraTexto(t, tam) { return String(t).replace(/<[^>]*>/g, "").length * tam * 0.56 + 4; }
+
+  // caixas já ocupadas por rótulos, para não escrever uns por cima dos outros
+  function Colocador() { this.caixas = []; }
+  Colocador.prototype.livre = function (b) {
+    for (var i = 0; i < this.caixas.length; i++) {
+      var c = this.caixas[i];
+      if (!(b.x + b.w < c.x || c.x + c.w < b.x || b.y + b.h < c.y || c.y + c.h < b.y)) return false;
+    }
+    return true;
+  };
+  Colocador.prototype.por = function (b) { this.caixas.push(b); };
+  function caixaTexto(x, y, t, tam, ancora) {
+    var w = larguraTexto(t, tam);
+    var x0 = ancora === "start" ? x : ancora === "end" ? x - w : x - w / 2;
+    return { x: x0, y: y - tam * 0.9, w: w, h: tam + 2 };
+  }
+
+  // ------------------------------------------------------------ desenho do modelo
+
+  function nomesApoios() {
+    var mapa = {};
+    if (est.res && est.res.modelo) est.res.modelo.apoios.forEach(function (a) { mapa[a.id] = a.nome; });
+    return mapa;
+  }
+
+  function reacaoDoApoio(id) {
+    if (!est.res || !est.res.reacoes) return null;
+    for (var i = 0; i < est.res.reacoes.length; i++) if (est.res.reacoes[i].id === id) return est.res.reacoes[i];
+    return null;
+  }
+
+  function eSel(k, id) { return est.sel && est.sel.k === k && est.sel.id === id; }
+
+  function realce(x, y, w, h) {
+    return '<rect x="' + r1(x) + '" y="' + r1(y) + '" width="' + r1(w) + '" height="' + r1(h) +
+      '" rx="6" fill="' + COR.dourado + '" fill-opacity="0.32" stroke="' + COR.dourado + '" stroke-width="1.5"/>';
+  }
+
+  function grupo(k, id, conteudo) { return '<g class="el" data-k="' + k + '" data-id="' + id + '" style="cursor:pointer">' + conteudo + "</g>"; }
+
+  function desenharApoio(g, a, nome) {
+    var x = g.X(a.x), y0 = g.y0, s = "", az = COR.azul, i;
+    if (eSel("apoios", a.id)) s += realce(x - 22, y0 - 22, 44, 54);
+    if (a.tipo === "encastramento") {
+      var lado = a.x >= g.L - 1e-9 && a.x > 1e-9 ? 1 : -1;
+      s += linha(x, y0 - 20, x, y0 + 20, az, 4);
+      for (i = 0; i < 6; i++) { var yy = y0 - 18 + i * 7.2; s += linha(x, yy, x + lado * 9, yy + 9, az, 1.3); }
+      // a letra fica por fora, acima do arco do momento de encastramento
+      s += texto(x + lado * 34, y0 - 22, esc(nome), { tam: 14, peso: 700, cor: az, ancora: lado > 0 ? "start" : "end" });
+      s += '<rect x="' + r1(x - 16) + '" y="' + r1(y0 - 22) + '" width="32" height="46" fill="transparent"/>';
+    } else {
+      var ang = a.tipo === "movel" ? (a.angulo || 0) : 0;
+      var t = '<polygon points="' + r1(x) + "," + r1(y0 + 3) + " " + r1(x - 11) + "," + r1(y0 + 21) + " " + r1(x + 11) + "," + r1(y0 + 21) +
+        '" fill="#fff" stroke="' + az + '" stroke-width="1.8" stroke-linejoin="round"/>';
+      var base = a.tipo === "movel" ? y0 + 26 : y0 + 21;
+      t += linha(x - 16, base, x + 16, base, az, 1.8);
+      for (i = 0; i < 6; i++) { var hx = x - 13 + i * 5.6; t += linha(hx, base, hx - 5, base + 6, az, 1.1); }
+      s += ang ? '<g transform="rotate(' + r1(ang) + " " + r1(x) + " " + r1(y0 + 3) + ')">' + t + "</g>" : t;
+      // inclinado para a direita, o símbolo avança para a esquerda: a letra afasta-se
+      s += texto(x - 20 - Math.max(0, ang) / 90 * 16, y0 + 17, esc(nome), { tam: 14, peso: 700, cor: az, ancora: "end" });
+      s += '<rect x="' + r1(x - 18) + '" y="' + r1(y0) + '" width="36" height="34" fill="transparent"/>';
+    }
+    return grupo("apoios", a.id, s);
+  }
+
+  // setas e rótulos das reações; os rótulos vão para um bloco por baixo do apoio
+  function desenharReacao(g, a, R, nome, blocos) {
+    var x = g.X(a.x), y0 = g.y0, s = "", vd = COR.reacao, linhas = [];
+    var temH = Math.abs(R.H) >= 0.005, temV = Math.abs(R.V) >= 0.005, temM = Math.abs(R.M) >= 0.005;
+    var inclinado = a.tipo === "movel" && Math.abs(a.angulo || 0) > 1e-9;
+    if (inclinado) {
+      if (Math.abs(R.R) >= 0.005) {
+        var b = (a.angulo || 0) * Math.PI / 180, dx = -Math.sin(b), dy = Math.cos(b);  // do apoio para fora
+        var px = x + dx * 34, py = y0 + 3 + dy * 34, qx = x + dx * 72, qy = y0 + 3 + dy * 72;
+        s += R.R > 0 ? seta(qx, qy, px, py, vd, 2) : seta(px, py, qx, qy, vd, 2);
+      }
+      linhas.push(nomeSvg("R", nome, " = " + fmt(Math.abs(R.R)) + " kN"));
+      linhas.push('<tspan font-size="10.5">(H ' + fmt(R.H) + " · V " + fmt(R.V) + ")</tspan>");
+    } else {
+      if (temV) {
+        var yTopo = a.tipo === "encastramento" ? y0 + 26 : y0 + 33;
+        s += R.V > 0 ? seta(x, y0 + 70, x, yTopo, vd, 2.2) : seta(x, yTopo, x, y0 + 70, vd, 2.2);
+      }
+      if (a.tipo === "movel") linhas.push(nomeSvg("R", nome, " = " + fmt(Math.abs(R.V)) + " kN"));
+      else {
+        linhas.push(nomeSvg("R", nome + "v", " = " + fmt(Math.abs(R.V)) + " kN"));
+        // a componente horizontal vai abaixo do símbolo, para não cortar a letra do apoio
+        if (temH) s += R.H > 0 ? seta(x - 58, y0 + 46, x - 6, y0 + 46, vd, 2.2) : seta(x + 58, y0 + 46, x + 6, y0 + 46, vd, 2.2);
+        linhas.push(nomeSvg("R", nome + "h", " = " + fmt(Math.abs(R.H)) + " kN"));
+      }
+    }
+    if (a.tipo === "encastramento") {
+      if (temM) {
+        var lado = a.x >= g.L - 1e-9 && a.x > 1e-9 ? 1 : (a.x <= 1e-9 ? -1 : 0);
+        var anti = R.M > 0, th0, th1;
+        if (lado < 0) { th0 = anti ? 260 : 100; th1 = anti ? 100 : 260; }
+        else if (lado > 0) { th0 = anti ? 80 : -80; th1 = anti ? -80 : 80; }
+        else { th0 = anti ? 340 : 200; th1 = anti ? 200 : 340; }
+        s += arco(x, y0, 27, th0, th1, vd, 2);
+      }
+      linhas.push(nomeSvg("M", nome, " = " + fmt(Math.abs(R.M)) + " kN·m"));
+    }
+    var w = 0;
+    linhas.forEach(function (l) { w = Math.max(w, larguraTexto(l.replace(/<[^>]*>/g, ""), 12)); });
+    blocos.push({ x: x, w: w, linhas: linhas });
+    return s;
+  }
+
+  function colocarBlocos(g, blocos) {
+    var s = "", y = g.y0 + 84, fim = -1e9;
+    blocos.sort(function (a, b) { return a.x - b.x; });
+    blocos.forEach(function (b) {
+      var x0 = clamp(b.x - b.w / 2, 4, g.W - 4 - b.w);
+      if (x0 < fim + 10) x0 = fim + 10;
+      fim = x0 + b.w;
+      b.linhas.forEach(function (l, i) {
+        s += texto(x0 + b.w / 2, y + i * 14, l, { tam: 12, cor: COR.reacao, peso: i === 0 ? 600 : 500, halo: true });
+      });
+    });
+    return s;
+  }
+
+  function desenharRotula(g, rt) {
+    var x = g.X(rt.x), y0 = g.y0, s = "";
+    if (eSel("rotulas", rt.id)) s += realce(x - 13, y0 - 13, 26, 26);
+    s += '<circle cx="' + r1(x) + '" cy="' + y0 + '" r="6.5" fill="#fff" stroke="' + COR.azul + '" stroke-width="2.4"/>';
+    s += '<circle cx="' + r1(x) + '" cy="' + y0 + '" r="12" fill="transparent"/>';
+    return grupo("rotulas", rt.id, s);
+  }
+
+  function desenharForca(g, f, col) {
+    var c = S.componentesForca(f), F = Math.hypot(c.Fx, c.Fy);
+    if (F < 1e-12) return "";
+    var ux = c.Fx / F, uy = -c.Fy / F, len = 56, x = g.X(f.x), y0 = g.y0, s = "";
+    var horizontal = Math.abs(c.Fy) <= 1e-9 * F;
+    var cabeca, cauda;
+    if (horizontal) {
+      cabeca = [x, y0 - 10]; cauda = [x - ux * len, y0 - 10];
+    } else if (c.Fy < 0) {
+      cabeca = [x, y0 - 4]; cauda = [x - ux * len, y0 - 4 - uy * len];
+    } else {
+      cauda = [x, y0 - 4]; cabeca = [x + ux * len, y0 - 4 + uy * len];
+    }
+    var minx = Math.min(cabeca[0], cauda[0]), maxx = Math.max(cabeca[0], cauda[0]);
+    var miny = Math.min(cabeca[1], cauda[1]), maxy = Math.max(cabeca[1], cauda[1]);
+    if (eSel("forcas", f.id)) s += realce(minx - 12, miny - 12, maxx - minx + 24, maxy - miny + 18);
+    var inclinada = !horizontal && Math.abs(c.Fx) > 1e-9 * F;
+    if (inclinada) {
+      var canto = [cabeca[0], cauda[1]];
+      s += seta(cauda[0], cauda[1], canto[0], canto[1], COR.carga, 1.2, true);
+      s += seta(canto[0], canto[1], cabeca[0], cabeca[1], COR.carga, 1.2, true);
+      var aH = ux > 0 ? 0 : 180, aF = Math.atan2(cabeca[1] - cauda[1], cabeca[0] - cauda[0]) * 180 / Math.PI;
+      var d = aF - aH;
+      while (d > 180) d -= 360;
+      while (d < -180) d += 360;
+      var n = 16, pts = [];
+      for (var i = 0; i <= n; i++) {
+        var t = (aH + d * i / n) * Math.PI / 180;
+        pts.push(r1(cauda[0] + 18 * Math.cos(t)) + "," + r1(cauda[1] + 18 * Math.sin(t)));
+      }
+      s += '<polyline fill="none" stroke="' + COR.carga + '" stroke-width="1" points="' + pts.join(" ") + '"/>';
+      var tm = (aH + d / 2) * Math.PI / 180;
+      s += texto(cauda[0] + 31 * Math.cos(tm), cauda[1] + 31 * Math.sin(tm) + 4, fmtAng(angulosDeAlfa(f.alfa).theta),
+        { tam: 10.5, cor: COR.carga, halo: true });
+    }
+    s += seta(cauda[0], cauda[1], cabeca[0], cabeca[1], COR.carga, 2.3);
+    // rótulo junto à extremidade livre da seta
+    var livre = (c.Fy < 0 || horizontal) ? cauda : cabeca;
+    var rot = fmt(F) + " kN", tam = 12, ancora = "middle", lx = livre[0], ly = livre[1] - 7;
+    if (horizontal) { ancora = ux > 0 ? "end" : "start"; lx = livre[0] - ux * 4; ly = livre[1] + 4; }
+    else if (Math.abs(ux) > 0.2) { ancora = (livre === cauda ? -ux : ux) > 0 ? "start" : "end"; lx = livre[0] + (ancora === "start" ? 3 : -3); }
+    for (var tentativa = 0; tentativa < 4; tentativa++) {
+      var cx = caixaTexto(lx, ly, rot, tam, ancora);
+      if (col.livre(cx)) { col.por(cx); break; }
+      ly -= 13;
+    }
+    s += texto(lx, ly, esc(rot), { tam: tam, cor: COR.carga, peso: 600, halo: true, ancora: ancora });
+    s += linha(cauda[0], cauda[1], cabeca[0], cabeca[1], "transparent", 16);
+    return grupo("forcas", f.id, s);
+  }
+
+  function desenharMomento(g, q, col) {
+    var x = g.X(q.x), y0 = g.y0, s = "";
+    if (eSel("momentos", q.id)) s += realce(x - 24, y0 - 24, 48, 40);
+    s += q.sentido === "horario" ? arco(x, y0, 16, 150, 410, COR.carga, 2) : arco(x, y0, 16, 30, -230, COR.carga, 2);
+    var rot = fmt(q.M) + " kN·m", lx = x + 20, ly = y0 - 22;
+    for (var t = 0; t < 4; t++) {
+      var cx = caixaTexto(lx, ly, rot, 12, "start");
+      if (col.livre(cx)) { col.por(cx); break; }
+      ly -= 13;
+    }
+    s += texto(lx, ly, esc(rot), { tam: 12, cor: COR.carga, peso: 600, halo: true, ancora: "start" });
+    s += '<circle cx="' + r1(x) + '" cy="' + y0 + '" r="21" fill="transparent"/>';
+    return grupo("momentos", q.id, s);
+  }
+
+  // faixas: cargas distribuídas que se sobrepõem ficam umas por cima das outras
+  function faixasDistribuidas(ds) {
+    var ordem = ds.slice().sort(function (a, b) { return a.x1 - b.x1; }), fins = [], faixa = {};
+    ordem.forEach(function (d) {
+      var k = 0;
+      while (k < fins.length && fins[k] > d.x1 + 1e-9) k++;
+      fins[k] = d.x2;
+      faixa[d.id] = k;
+    });
+    return { faixa: faixa, n: Math.max(1, fins.length) };
+  }
+
+  function desenharDistribuida(g, d, yb, hq, qmax, col) {
+    var X = g.X, x1 = X(d.x1), x2 = X(d.x2), s = "";
+    function q(x) { return d.x2 > d.x1 ? d.q1 + (d.q2 - d.q1) * (x - d.x1) / (d.x2 - d.x1) : d.q1; }
+    function h(qq) { return qmax > 0 ? Math.abs(qq) / qmax * hq : 0; }
+    var topo = yb - Math.max(h(d.q1), h(d.q2));
+    if (eSel("distribuidas", d.id)) s += realce(x1 - 6, topo - 6, x2 - x1 + 12, yb - topo + 10);
+    var pts = [r1(x1) + "," + r1(yb)];
+    for (var i = 0; i <= 24; i++) {
+      var xx = d.x1 + (d.x2 - d.x1) * i / 24;
+      pts.push(r1(X(xx)) + "," + r1(yb - h(q(xx))));
+    }
+    pts.push(r1(x2) + "," + r1(yb));
+    s += '<polygon points="' + pts.join(" ") + '" fill="' + COR.cargaClaro + '" stroke="' + COR.carga + '" stroke-width="1.3" stroke-linejoin="round"/>';
+    var n = Math.max(2, Math.round((x2 - x1) / 24)) + 1;
+    for (var k = 0; k < n; k++) {
+      var xa = d.x1 + (d.x2 - d.x1) * k / (n - 1), qa = q(xa), ha = h(qa), px = X(xa);
+      if (ha < 6) continue;
+      s += qa > 0 ? seta(px, yb - ha, px, yb, COR.carga, 1.1) : seta(px, yb, px, yb - ha, COR.carga, 1.1);
+    }
+    // rótulos
+    var rots = [];
+    // sem sinal: o sentido lê-se nas setas
+    if (Math.abs(d.q1 - d.q2) < 1e-9) rots.push({ x: (x1 + x2) / 2, y: yb - h(d.q1) - 5, t: fmt(Math.abs(d.q1)) + " kN/m", a: "middle" });
+    else {
+      if (Math.abs(d.q1) > 1e-9) rots.push({ x: x1, y: yb - h(d.q1) - 5, t: fmt(Math.abs(d.q1)) + " kN/m", a: "start" });
+      if (Math.abs(d.q2) > 1e-9) rots.push({ x: x2, y: yb - h(d.q2) - 5, t: fmt(Math.abs(d.q2)) + " kN/m", a: "end" });
+    }
+    rots.forEach(function (rt) {
+      for (var t = 0; t < 3; t++) {
+        var cx = caixaTexto(rt.x, rt.y, rt.t, 11.5, rt.a);
+        if (col.livre(cx)) { col.por(cx); break; }
+        rt.y -= 12;
+      }
+      s += texto(rt.x, rt.y, esc(rt.t), { tam: 11.5, cor: COR.carga, peso: 600, halo: true, ancora: rt.a });
+    });
+    s += '<rect x="' + r1(x1) + '" y="' + r1(topo) + '" width="' + r1(Math.max(4, x2 - x1)) + '" height="' + r1(yb - topo + 2) + '" fill="transparent"/>';
+    if (eSel("distribuidas", d.id)) {
+      [[x1, "1"], [x2, "2"]].forEach(function (p) {
+        s += '<rect data-ponta="' + p[1] + '" x="' + r1(p[0] - 5) + '" y="' + r1((topo + yb) / 2 - 9) + '" width="10" height="18" rx="2" fill="' +
+          COR.dourado + '" stroke="' + COR.azul + '" stroke-width="1" style="cursor:ew-resize"/>';
+      });
+    }
+    return grupo("distribuidas", d.id, s);
+  }
+
+  function posicoesCota(m) {
+    var xs = [0, m.L];
+    m.apoios.forEach(function (a) { xs.push(a.x); });
+    m.rotulas.forEach(function (r) { xs.push(r.x); });
+    m.forcas.forEach(function (f) { xs.push(f.x); });
+    m.momentos.forEach(function (q) { xs.push(q.x); });
+    m.distribuidas.forEach(function (d) { xs.push(d.x1, d.x2); });
+    xs = xs.filter(function (x) { return x >= -1e-9 && x <= m.L + 1e-9; }).sort(function (a, b) { return a - b; });
+    var out = [];
+    xs.forEach(function (x) { if (!out.length || x - out[out.length - 1] > 1e-6) out.push(x); });
+    return out;
+  }
+
+  function desenharModelo(g) {
+    var m = est.modelo, s = [], y0 = g.y0, X = g.X, nomes = nomesApoios(), col = new Colocador();
+    s.push('<rect x="0" y="0" width="' + g.W + '" height="' + g.hM + '" fill="#fff"/>');
+
+    // régua em metros, no topo
+    var passos = [0.25, 0.5, 1, 2, 5, 10, 20, 50], p = passos[passos.length - 1];
+    for (var i = 0; i < passos.length; i++) if (passos[i] * g.sx >= 50) { p = passos[i]; break; }
+    var casas = p < 0.5 ? 2 : p < 1 ? 1 : 0;
+    for (var xr = 0; xr <= m.L + 1e-9; xr += p) {
+      s.push(linha(X(xr), 18, X(xr), y0 - 8, "#F0F3F6", 1));
+      s.push(texto(X(xr), 13, fmt(xr, casas), { tam: 10, cor: "#A3ADB8" }));
+    }
+    s.push(texto(g.ml - 22, 13, "x (m)", { tam: 10, cor: "#A3ADB8", ancora: "end" }));
+
+    // cargas distribuídas
+    var fx = faixasDistribuidas(m.distribuidas), qmax = 0;
+    m.distribuidas.forEach(function (d) { qmax = Math.max(qmax, Math.abs(d.q1), Math.abs(d.q2)); });
+    var livre = y0 - 32, hq = clamp((livre - 18 * fx.n) / fx.n, 12, 44);
+    m.distribuidas.forEach(function (d) {
+      var yb = y0 - 4 - fx.faixa[d.id] * (hq + 18);
+      s.push(desenharDistribuida(g, d, yb, hq, qmax, col));
+    });
+    if (est.previa) {
+      var a = X(Math.min(est.previa.x1, est.previa.x2)), b = X(Math.max(est.previa.x1, est.previa.x2));
+      s.push('<rect x="' + r1(a) + '" y="' + r1(y0 - 4 - hq) + '" width="' + r1(Math.max(2, b - a)) + '" height="' + r1(hq) +
+        '" fill="' + COR.cargaClaro + '" fill-opacity="0.7" stroke="' + COR.carga + '" stroke-dasharray="5 3"/>');
+    }
+
+    // viga
+    s.push(linha(X(0), y0, X(m.L), y0, COR.azul, 5));
+
+    // cotas
+    var yc = y0 + 127, pc = posicoesCota(m);
+    s.push(linha(X(0), yc, X(m.L), yc, COR.cinza, 1));
+    pc.forEach(function (x) { s.push(linha(X(x) - 4, yc + 4, X(x) + 4, yc - 4, COR.cinza, 1.2)); s.push(linha(X(x), yc - 7, X(x), yc + 7, COR.cinza, 0.8)); });
+    for (var k = 0; k < pc.length - 1; k++) {
+      var wseg = (pc[k + 1] - pc[k]) * g.sx;
+      if (wseg >= 34) s.push(texto(X((pc[k] + pc[k + 1]) / 2), yc - 5, fmt(pc[k + 1] - pc[k]), { tam: 11, cor: COR.cinza }));
+    }
+    s.push(texto(g.ml - 12, yc + 4, "cotas (m)", { tam: 10, cor: "#A3ADB8", ancora: "end" }));
+
+    // apoios, reações, rótulas
+    var blocos = [];
+    m.apoios.forEach(function (a) { s.push(desenharApoio(g, a, nomes[a.id] || "?")); });
+    m.rotulas.forEach(function (rt) { s.push(desenharRotula(g, rt)); });
+    m.apoios.forEach(function (a) {
+      var R = reacaoDoApoio(a.id);
+      if (R) s.push(desenharReacao(g, a, R, nomes[a.id] || "?", blocos));
+    });
+    s.push(colocarBlocos(g, blocos));
+
+    // forças e momentos por cima de tudo
+    m.momentos.forEach(function (q) { s.push(desenharMomento(g, q, col)); });
+    m.forcas.forEach(function (f) { s.push(desenharForca(g, f, col)); });
+    return s.join("");
+  }
+
+  // ------------------------------------------------------------ diagramas
+
+  function regioes(pts, k, tolv) {
+    var regs = [], cur = null, xZero = null;
+    function sg(v) { return v > tolv ? 1 : v < -tolv ? -1 : 0; }
+    function fecha(x) { if (cur) { cur.pts.push([x, 0]); regs.push(cur); cur = null; } }
+    for (var i = 0; i < pts.length; i++) {
+      var x = pts[i].x, v = pts[i][k], s1 = sg(v);
+      if (cur && s1 !== 0 && s1 !== cur.s) {
+        var ant = cur.pts[cur.pts.length - 1];
+        var xc = Math.abs(ant[0] - x) < 1e-12 ? x : ant[0] + (x - ant[0]) * (ant[1] / (ant[1] - v));
+        fecha(xc);
+        cur = { s: s1, pts: [[xc, 0]] };
+      }
+      if (s1 === 0) { fecha(x); xZero = x; continue; }
+      // a região começa no último ponto em que o diagrama passou por zero
+      if (!cur) cur = { s: s1, pts: [[xZero !== null ? xZero : x, 0]] };
+      xZero = null;
+      cur.pts.push([x, v]);
+    }
+    if (pts.length) fecha(pts[pts.length - 1].x);
+    return regs;
+  }
+
+  // sentidos positivos de N, V ou M nas duas faces de um troço, como na figura da sebenta (§3)
+  function pictogramaSeccao(k, cx, cy) {
+    var az = COR.azul, s = '<g><title>Sentidos positivos de ' + k + " (convenção da secção)</title>";
+    s += '<rect x="' + r1(cx - 4) + '" y="' + r1(cy - 6) + '" width="8" height="12" fill="#DCE4EC" stroke="' + az + '" stroke-width="1"/>';
+    if (k === "N") s += seta(cx - 6, cy, cx - 20, cy, az, 1.5) + seta(cx + 6, cy, cx + 20, cy, az, 1.5);
+    else if (k === "V") s += seta(cx - 10, cy + 8, cx - 10, cy - 8, az, 1.5) + seta(cx + 10, cy - 8, cx + 10, cy + 8, az, 1.5);
+    else s += arco(cx - 15, cy, 8, 160, 340, az, 1.5, 5) + arco(cx + 15, cy, 8, 20, -160, az, 1.5, 5);
+    return s + "</g>";
+  }
+
+  // os três sentidos positivos numa linha, por cima do quadro de esforços
+  function legendaSeccao() {
+    var s = '<svg width="330" height="30" viewBox="0 0 330 30" font-family="' + FONTE + '">';
+    ["N", "V", "M"].forEach(function (k, i) {
+      var ox = 6 + i * 110;
+      s += texto(ox, 20, k, { tam: 14, peso: 700, cor: COR.azul, ancora: "start" });
+      s += pictogramaSeccao(k, ox + 44, 15);
+    });
+    return s + "</svg>";
+  }
+
+  function desenharPainel(g, p, res) {
+    var s = [], top = p.top, h = p.h, yb = top + h / 2, X = g.X, k = p.k, m = est.modelo;
+    s.push('<rect x="0" y="' + top + '" width="' + g.W + '" height="' + h + '" fill="#fff"/>');
+    s.push(linha(0, top + 0.5, g.W, top + 0.5, "#DDE3E9", 1));
+    s.push(pictogramaSeccao(k, 46, yb - 28));
+    s.push(texto(16, yb + 2, p.nome, { tam: 22, peso: 700, cor: COR.azul, ancora: "start" }));
+    s.push(texto(16, yb + 18, esc(p.unidade), { tam: 11, cor: COR.cinza, ancora: "start" }));
+    if (p.nota) s.push(texto(16, yb + 32, esc(p.nota), { tam: 10, cor: COR.cinza, ancora: "start" }));
+    // guias nos apoios e nas rótulas
+    m.apoios.forEach(function (a) { s.push(linha(X(a.x), top + 6, X(a.x), top + h - 6, COR.guia, 1, ' stroke-dasharray="3 3"')); });
+    m.rotulas.forEach(function (rt) { s.push(linha(X(rt.x), top + 6, X(rt.x), top + h - 6, COR.guia, 1, ' stroke-dasharray="3 3"')); });
+
+    var temDiagrama = res && res.diagrama && res.diagrama.length;
+    if (!temDiagrama) {
+      s.push(linha(X(0), yb, X(m.L), yb, "#C3CCD5", 1.2));
+      return s.join("");
+    }
+    var pts = res.diagrama, vmax = 0;
+    pts.forEach(function (q) { vmax = Math.max(vmax, Math.abs(q[k])); });
+    if (vmax < 0.005) {
+      s.push(linha(X(0), yb, X(m.L), yb, COR.azul, 1.6));
+      s.push(texto(X(m.L / 2), yb - 8, esc(p.nome + " = 0 em toda a viga"), { tam: 12, cor: COR.cinza, estilo: "italic" }));
+      return s.join("");
+    }
+    var escala = (h / 2 - 22) / vmax;
+    function Y(v) { return k === "M" ? yb + v * escala : yb - v * escala; }
+    var regs = regioes(pts, k, vmax * 1e-9);
+    regs.forEach(function (rg) {
+      var cheio = k === "N" ? (rg.s > 0 ? COR.tracaoClaro : COR.compressaoClaro) : COR.preenche;
+      var traco = k === "N" ? (rg.s > 0 ? COR.tracao : COR.compressao) : COR.azul;
+      var pp = rg.pts.map(function (q) { return r1(X(q[0])) + "," + r1(Y(q[1])); }).join(" ");
+      s.push('<polygon points="' + pp + '" fill="' + cheio + '"/>');
+      s.push('<polyline points="' + pp + '" fill="none" stroke="' + traco + '" stroke-width="2" stroke-linejoin="round"/>');
+    });
+    s.push(linha(X(0), yb, X(m.L), yb, COR.azul, 1.4));
+
+    var col = new Colocador();
+    // sinais: no centroide de cada região, se houver espaço
+    regs.forEach(function (rg) {
+      var A = 0, Ax = 0;
+      for (var i = 1; i < rg.pts.length; i++) {
+        var a = rg.pts[i - 1], b = rg.pts[i], dx = b[0] - a[0], va = Math.abs(a[1]), vb = Math.abs(b[1]);
+        A += (va + vb) / 2 * dx;
+        Ax += (va + vb) / 2 * dx * (a[0] + b[0]) / 2;
+      }
+      if (A <= 0) return;
+      var xc = Ax / A, x0 = rg.pts[0][0], x1 = rg.pts[rg.pts.length - 1][0];
+      if ((x1 - x0) * g.sx < 26) return;
+      var vc = 0;
+      for (var j = 1; j < rg.pts.length; j++) {
+        var p0 = rg.pts[j - 1], p1 = rg.pts[j];
+        if (p0[0] <= xc && p1[0] >= xc && p1[0] > p0[0]) { vc = p0[1] + (p1[1] - p0[1]) * (xc - p0[0]) / (p1[0] - p0[0]); break; }
+      }
+      if (Math.abs(vc) * escala < 22) return;
+      var cx = X(xc), cy = (yb + Y(vc)) / 2;
+      var corS = k === "N" ? (rg.s > 0 ? COR.tracao : COR.compressao) : COR.azul;
+      s.push('<circle cx="' + r1(cx) + '" cy="' + r1(cy) + '" r="8.5" fill="#fff" stroke="' + corS + '" stroke-width="1.4"/>');
+      s.push(texto(cx, cy + 4.6, rg.s > 0 ? "+" : "−", { tam: 14, peso: 700, cor: corS }));
+      col.por({ x: cx - 10, y: cy - 10, w: 20, h: 20 });
+    });
+
+    // valores nos pontos notáveis e nos extremos
+    if (est.valores) {
+      var cands = [], tolv = 0.005, L = m.L;
+      var mx = res.maximos || {}, gmax = mx[k + "max"], gmin = mx[k + "min"];
+      function prio(x, v) {
+        if (gmax && Math.abs(x - gmax.x) < 1e-6 && Math.abs(v - gmax.valor) < 1e-6) return 5;
+        if (gmin && Math.abs(x - gmin.x) < 1e-6 && Math.abs(v - gmin.valor) < 1e-6) return 5;
+        return 1;
+      }
+      res.pontos.forEach(function (pt) {
+        var ve = pt.esq[k], vd = pt.dir[k];
+        if (pt.x > 1e-9 && pt.x < L - 1e-9 && Math.abs(ve - vd) > tolv) {
+          if (Math.abs(ve) >= tolv) cands.push({ x: pt.x, v: ve, lado: "esq", p: prio(pt.x, ve) + 1 });
+          if (Math.abs(vd) >= tolv) cands.push({ x: pt.x, v: vd, lado: "dir", p: prio(pt.x, vd) + 1 });
+        } else {
+          var v = pt.x >= L - 1e-9 ? ve : vd;
+          if (Math.abs(v) >= tolv) cands.push({ x: pt.x, v: v, lado: pt.x <= 1e-9 ? "dir" : pt.x >= L - 1e-9 ? "esq" : "meio", p: prio(pt.x, v) + (pt.nome ? 1 : 0) });
+        }
+      });
+      if (k === "M") (res.extremos || []).forEach(function (e) { if (Math.abs(e.M) >= tolv) cands.push({ x: e.x, v: e.M, lado: "meio", p: prio(e.x, e.M) + 3 }); });
+      cands.sort(function (a, b) { return b.p - a.p; });
+      cands.forEach(function (c) {
+        var px = X(c.x), py = Y(c.v), acima = py < yb, t = fmt(c.v), tam = 11.5;
+        var ancora = c.lado === "esq" ? "end" : c.lado === "dir" ? "start" : "middle";
+        var lx = px + (c.lado === "esq" ? -4 : c.lado === "dir" ? 4 : 0);
+        var ly = acima ? py - 6 : py + 15;
+        for (var t2 = 0; t2 < 3; t2++) {
+          var yy = clamp(ly + (acima ? -13 : 13) * t2, top + 13, top + h - 4);
+          var cx = caixaTexto(lx, yy, t, tam, ancora);
+          if (col.livre(cx)) {
+            col.por(cx);
+            s.push(texto(lx, yy, esc(t), { tam: tam, peso: c.p >= 5 ? 700 : 500, halo: true, ancora: ancora }));
+            break;
+          }
+        }
+      });
+    }
+    return s.join("");
+  }
+
+  // secção fixada: linha a dourado e os valores
+  function desenharSeccao(g, res) {
+    if (est.seccao === null || !res || !res.esforcos) return "";
+    var x = est.seccao, px = g.X(x), s = ['<g style="pointer-events:none">'];
+    s.push(linha(px, 20, px, g.H - 4, COR.dourado, 2, ' stroke-dasharray="6 4"'));
+    var e = res.esforcos(x, "esq"), d = res.esforcos(x, "dir");
+    var tx = "x = " + fmt(x) + " m", tw = larguraTexto(tx, 12) + 8, tl = clamp(px - tw / 2, 4, g.W - 4 - tw);
+    s.push('<rect x="' + r1(tl) + '" y="20" width="' + r1(tw) + '" height="18" rx="4" fill="#FFF6D6" stroke="' + COR.dourado + '"/>');
+    s.push(texto(tl + tw / 2, 33, esc(tx), { tam: 12, peso: 700, cor: "#5C4100" }));
+    g.paineis.forEach(function (p) {
+      var vmax = 0;
+      res.diagrama.forEach(function (q) { vmax = Math.max(vmax, Math.abs(q[p.k])); });
+      if (vmax < 0.005) return;
+      var escala = (p.h / 2 - 22) / vmax, yb = p.top + p.h / 2;
+      function Y(v) { return p.k === "M" ? yb + v * escala : yb - v * escala; }
+      var ve = e[p.k], vd = d[p.k], salto = Math.abs(ve - vd) >= 0.005;
+      var t = salto ? fmt(ve) + " | " + fmt(vd) : fmt(vd);
+      s.push('<circle cx="' + r1(px) + '" cy="' + r1(Y(vd)) + '" r="4" fill="' + COR.dourado + '" stroke="' + COR.azul + '" stroke-width="1"/>');
+      if (salto) s.push('<circle cx="' + r1(px) + '" cy="' + r1(Y(ve)) + '" r="4" fill="' + COR.dourado + '" stroke="' + COR.azul + '" stroke-width="1"/>');
+      var w = larguraTexto(t, 12) + 8, lx = px + 8 + w > g.W - 4 ? px - 8 - w : px + 8, ly = p.top + 8;
+      s.push('<rect x="' + r1(lx) + '" y="' + r1(ly) + '" width="' + r1(w) + '" height="18" rx="4" fill="#FFF6D6" stroke="' + COR.dourado + '"/>');
+      s.push(texto(lx + w / 2, ly + 13, esc(t), { tam: 12, peso: 700, cor: "#5C4100" }));
+    });
+    s.push("</g>");
+    return s.join("");
+  }
+
+  function construirSvg(g, res, paraExportar) {
+    var s = [];
+    s.push('<svg xmlns="http://www.w3.org/2000/svg" width="' + g.W + '" height="' + g.H + '" viewBox="0 0 ' + g.W + " " + g.H +
+      '" font-family="' + FONTE + '">');
+    s.push('<rect width="100%" height="100%" fill="#fff"/>');
+    s.push(desenharModelo(g));
+    g.paineis.forEach(function (p) { s.push(desenharPainel(g, p, res)); });
+    if (!res || !res.diagrama) {
+      var msg = !res || res.erros.length ? "Corrija os dados da viga." :
+        res.classificacao.tipo === "hipostatica" ? "Viga hipostática: não há diagramas." : "";
+      if (!est.modelo.apoios.length) msg = "Ponha os apoios: escolha um tipo de apoio na barra e clique na viga.";
+      if (msg) s.push(texto(g.X(g.L / 2), g.hM + g.hD * 1.5, esc(msg), { tam: 14, cor: COR.carga, peso: 600, halo: true }));
+    }
+    s.push(desenharSeccao(g, res));
+    if (!paraExportar) {
+      s.push('<g id="cursor" style="display:none;pointer-events:none">' + linha(0, 20, 0, g.H - 4, COR.cinza, 1, ' stroke-dasharray="4 3" id="cur-linha"'));
+      g.paineis.forEach(function (p) {
+        s.push('<circle id="cur-p-' + p.k + '" r="3.5" fill="' + COR.azul + '"/>');
+        s.push('<text id="cur-t-' + p.k + '" font-size="11.5" font-weight="600" fill="' + COR.azul +
+          '" stroke="#fff" stroke-width="3.5" paint-order="stroke" stroke-linejoin="round"></text>');
+      });
+      s.push("</g>");
+    }
+    s.push("</svg>");
+    return s.join("");
+  }
+
+  function desenhar() {
+    est.geo = geometria();
+    $("area-desenho").innerHTML = construirSvg(est.geo, est.res, false);
+  }
+
+  // ------------------------------------------------------------ cursor e estado
+
+  function dica() {
+    return {
+      selecionar: "Arraste um elemento ao longo da viga. <b>Duplo clique</b> edita, <b>botão direito</b> apaga. Clique num diagrama para fixar uma secção.",
+      movel: "Clique na viga para pôr um apoio móvel. Sobre um apoio existente, troca-lhe o tipo.",
+      fixo: "Clique na viga para pôr um apoio fixo. Sobre um apoio existente, troca-lhe o tipo.",
+      encastramento: "Clique na viga para pôr um encastramento. Sobre um apoio existente, troca-lhe o tipo.",
+      rotula: "Clique no interior da viga para pôr uma rótula.",
+      forca: "Clique na viga no ponto onde atua a força.",
+      momento: "Clique na viga no ponto onde atua o momento.",
+      distribuida: "Clique no início da carga e arraste até ao fim, ou clique uma vez e escreva as posições."
+    }[est.ferramenta];
+  }
+
+  function mostrarEstado(html) { $("estado").innerHTML = html; }
+
+  function aviso(texto) {
+    mostrarEstado('<span style="color:' + COR.carga + ';font-weight:600">' + esc(texto) + "</span>");
+    est.avisoAte = Date.now() + 4500;
+    clearTimeout(est.temporizador);
+    est.temporizador = setTimeout(function () { mostrarEstado(dica()); }, 4500);
+  }
+
+  function esconderCursor() {
+    var c = document.getElementById("cursor");
+    if (c) c.style.display = "none";
+    if (!(Date.now() < (est.avisoAte || 0))) mostrarEstado(dica());
+  }
+
+  function moverCursor(x) {
+    var g = est.geo, res = est.res, c = document.getElementById("cursor");
+    if (!c || !g) return;
+    if (x < 0 || x > g.L) { c.style.display = "none"; return; }
+    var px = g.X(x);
+    c.style.display = "";
+    var ln = document.getElementById("cur-linha");
+    ln.setAttribute("x1", r1(px)); ln.setAttribute("x2", r1(px));
+    if (!res || !res.esforcos) {
+      g.paineis.forEach(function (p) {
+        document.getElementById("cur-p-" + p.k).setAttribute("cx", -100);
+        document.getElementById("cur-t-" + p.k).textContent = "";
+      });
+      mostrarEstado("x = <b>" + fmt(x) + " m</b>");
+      return;
+    }
+    var v = res.esforcos(x);
+    g.paineis.forEach(function (p) {
+      var vmax = 0;
+      res.diagrama.forEach(function (q) { vmax = Math.max(vmax, Math.abs(q[p.k])); });
+      var escala = vmax < 0.005 ? 0 : (p.h / 2 - 22) / vmax, yb = p.top + p.h / 2;
+      var y = p.k === "M" ? yb + v[p.k] * escala : yb - v[p.k] * escala;
+      var pt = document.getElementById("cur-p-" + p.k), tx = document.getElementById("cur-t-" + p.k);
+      pt.setAttribute("cx", r1(px)); pt.setAttribute("cy", r1(y));
+      var dir = px < g.W - 110;
+      tx.setAttribute("x", r1(px + (dir ? 7 : -7))); tx.setAttribute("y", r1(clamp(y - 7, p.top + 14, p.top + p.h - 4)));
+      tx.setAttribute("text-anchor", dir ? "start" : "end");
+      tx.textContent = fmt(v[p.k]);
+    });
+    mostrarEstado("x = <b>" + fmt(x) + " m</b> &nbsp;·&nbsp; N = <b>" + fmt(v.N) + " kN</b> &nbsp;·&nbsp; V = <b>" + fmt(v.V) +
+      " kN</b> &nbsp;·&nbsp; M = <b>" + fmt(v.M) + " kN·m</b>");
+  }
+
+  // ------------------------------------------------------------ posições
+
+  function posicoesExistentes(ignorar) {
+    var m = est.modelo, xs = [0, m.L];
+    TIPOS.forEach(function (k) {
+      m[k].forEach(function (e) {
+        if (ignorar && ignorar.k === k && ignorar.id === e.id) return;
+        if (e.x !== undefined) xs.push(e.x); else { xs.push(e.x1, e.x2); }
+      });
+    });
+    return xs;
+  }
+
+  function ajustar(xm, ignorar) {
+    var L = est.modelo.L, g = est.geo, tolm = 7 / g.sx, melhor = null;
+    posicoesExistentes(ignorar).forEach(function (p) {
+      var d = Math.abs(p - xm);
+      if (d <= tolm && (melhor === null || d < Math.abs(melhor - xm))) melhor = p;
+    });
+    if (melhor !== null) return clamp(melhor, 0, L);
+    var passo = est.grelha > 0 ? est.grelha : 0.01;
+    return arred(clamp(Math.round(xm / passo) * passo, 0, L));
+  }
+
+  function pontoNoSvg(ev) {
+    var svg = $("area-desenho").querySelector("svg");
+    var rc = svg.getBoundingClientRect(), k = est.geo.W / rc.width;
+    return { x: (ev.clientX - rc.left) * k, y: (ev.clientY - rc.top) * k };
+  }
+
+  // ------------------------------------------------------------ interação no desenho
+
+  function alvoDe(ev) {
+    var t = ev.target;
+    while (t && t !== document && !(t.getAttribute && t.getAttribute("data-k"))) {
+      if (t.id === "area-desenho") return null;
+      t = t.parentNode;
+    }
+    if (!t || t === document) return null;
+    var ponta = ev.target.getAttribute && ev.target.getAttribute("data-ponta");
+    return { k: t.getAttribute("data-k"), id: +t.getAttribute("data-id"), ponta: ponta };
+  }
+
+  function fixarSeccao(xm) {
+    var g = est.geo, L = est.modelo.L;
+    if (xm < -0.02 * L || xm > 1.02 * L) return;
+    var x = ajustar(clamp(xm, 0, L));
+    if (est.seccao !== null && Math.abs((est.seccao - x) * g.sx) < 4) est.seccao = null;
+    else est.seccao = x;
+    var inp = $("seccao-x");
+    if (inp) inp.value = est.seccao === null ? "" : fmt(est.seccao);
+    desenhar();
+    atualizarSeccao();
+  }
+
+  function aoPremir(ev) {
+    if (est.dialogo || !est.geo || (ev.button !== undefined && ev.button !== 0)) return;
+    var p = pontoNoSvg(ev), g = est.geo, L = est.modelo.L, xm = g.xDe(p.x);
+    var alvo = alvoDe(ev), f = est.ferramenta;
+    if (p.y > g.hM) { fixarSeccao(xm); return; }
+    if (f === "selecionar") {
+      if (alvo) {
+        // duplo clique (ou toque duplo) no mesmo elemento: editar
+        var agora = Date.now(), u = est.ultimoToque;
+        if (u && u.k === alvo.k && u.id === alvo.id && agora - u.t < 450 && Math.hypot(p.x - u.x, p.y - u.y) < 8) {
+          est.ultimoToque = null;
+          editar(alvo.k, alvo.id);
+          return;
+        }
+        est.ultimoToque = { k: alvo.k, id: alvo.id, t: agora, x: p.x, y: p.y };
+        var e = acharElemento(alvo.k, alvo.id);
+        est.sel = { k: alvo.k, id: alvo.id };
+        est.arrasto = { modo: "mover", k: alvo.k, id: alvo.id, ponta: alvo.ponta, xm0: xm, orig: JSON.parse(JSON.stringify(e)),
+                        antes: JSON.stringify(est.modelo), moveu: false };
+        try { $("area-desenho").setPointerCapture(ev.pointerId); } catch (er) { /* */ }
+        desenhar(); painel();
+        ev.preventDefault();
+      } else if (est.sel) { est.sel = null; desenhar(); painel(); }
+      return;
+    }
+    if (xm < -0.03 * L || xm > 1.03 * L) return;
+    var x = ajustar(clamp(xm, 0, L));
+    ev.preventDefault();
+    if (f === "movel" || f === "fixo" || f === "encastramento") { colocarApoio(f, x); return; }
+    if (f === "rotula") { colocarRotula(x); return; }
+    if (f === "forca") { dialogoForca(null, x); return; }
+    if (f === "momento") { dialogoMomento(null, x); return; }
+    if (f === "distribuida") {
+      est.arrasto = { modo: "nova", x1: x };
+      est.previa = { x1: x, x2: x };
+      try { $("area-desenho").setPointerCapture(ev.pointerId); } catch (er) { /* */ }
+      desenhar();
+    }
+  }
+
+  function aoMover(ev) {
+    if (!est.geo || est.dialogo) return;
+    var p = pontoNoSvg(ev), g = est.geo, L = est.modelo.L, xm = g.xDe(p.x), a = est.arrasto;
+    if (a && a.modo === "nova") {
+      est.previa.x2 = ajustar(clamp(xm, 0, L));
+      desenhar();
+      mostrarEstado("Carga de <b>" + fmt(Math.min(est.previa.x1, est.previa.x2)) + "</b> a <b>" + fmt(Math.max(est.previa.x1, est.previa.x2)) + " m</b>");
+      return;
+    }
+    if (a && a.modo === "mover") {
+      var dx = xm - a.xm0;
+      if (!a.moveu && Math.abs(dx * g.sx) < 3) return;
+      a.moveu = true;
+      var e = acharElemento(a.k, a.id), o = a.orig, ign = { k: a.k, id: a.id };
+      if (!e) return;
+      if (a.k === "distribuidas") {
+        var passo = est.grelha > 0 ? est.grelha : 0.01;
+        if (a.ponta === "1") e.x1 = Math.min(ajustar(clamp(o.x1 + dx, 0, L), ign), arred(e.x2 - passo));
+        else if (a.ponta === "2") e.x2 = Math.max(ajustar(clamp(o.x2 + dx, 0, L), ign), arred(e.x1 + passo));
+        else {
+          var comp = o.x2 - o.x1, nx = ajustar(clamp(o.x1 + dx, 0, L - comp), ign);
+          nx = clamp(nx, 0, L - comp);
+          e.x1 = arred(nx); e.x2 = arred(nx + comp);
+        }
+        mostrarEstado("Carga de <b>" + fmt(e.x1) + "</b> a <b>" + fmt(e.x2) + " m</b>");
+      } else {
+        e.x = ajustar(clamp(o.x + dx, 0, L), ign);
+        mostrarEstado("x = <b>" + fmt(e.x) + " m</b>");
+      }
+      recalcular();
+      return;
+    }
+    if (p.y >= 0 && p.y <= g.H) moverCursor(xm); else esconderCursor();
+  }
+
+  function aoLargar(ev) {
+    var a = est.arrasto;
+    if (!a) return;
+    est.arrasto = null;
+    try { $("area-desenho").releasePointerCapture(ev.pointerId); } catch (er) { /* */ }
+    if (a.modo === "nova") {
+      var x1 = Math.min(est.previa.x1, est.previa.x2), x2 = Math.max(est.previa.x1, est.previa.x2);
+      est.previa = null;
+      if (x2 - x1 < 1e-6) {
+        var L = est.modelo.L, passo = est.grelha > 0 ? est.grelha : 0.01;
+        x2 = arred(Math.min(L, x1 + Math.max(passo, Math.round(L / 4 / passo) * passo)));
+        if (x2 - x1 < 1e-6) { x1 = arred(Math.max(0, x2 - Math.max(passo, L / 4))); }
+      }
+      desenhar();
+      dialogoDistribuida(null, x1, x2);
+      return;
+    }
+    if (a.modo === "mover" && a.moveu) {
+      var res = S.resolver(est.modelo);
+      if (res.erros.length) {
+        est.modelo = JSON.parse(a.antes);
+        aviso("Não pode ficar aí: " + res.erros[0]);
+      } else {
+        est.hist.push(a.antes);
+        est.fut = [];
+        mostrarEstado(dica());
+      }
+      atualizar();
+    }
+  }
+
+  function aoMenuContexto(ev) {
+    var alvo = alvoDe(ev);
+    if (!alvo) return;
+    ev.preventDefault();
+    apagar(alvo.k, alvo.id);
+  }
+
+  // ------------------------------------------------------------ operações sobre elementos
+
+  function colocarApoio(tipo, x) {
+    var m = est.modelo, existente = null;
+    m.apoios.forEach(function (a) { if (Math.abs(a.x - x) < 1e-9) existente = a; });
+    if (existente && existente.tipo === tipo) { est.sel = { k: "apoios", id: existente.id }; desenhar(); painel(); return; }
+    alterar(function (mm) {
+      if (existente) { existente.tipo = tipo; existente.angulo = 0; est.sel = { k: "apoios", id: existente.id }; }
+      else {
+        var id = est.proximoId++;
+        mm.apoios.push({ id: id, x: x, tipo: tipo, angulo: 0 });
+        est.sel = { k: "apoios", id: id };
+      }
+    });
+  }
+
+  function colocarRotula(x) {
+    var m = est.modelo;
+    if (x <= 1e-9 || x >= m.L - 1e-9) { aviso("Uma rótula tem de ficar no interior da viga."); return; }
+    if (m.rotulas.some(function (r) { return Math.abs(r.x - x) < 1e-9; })) { aviso("Já há uma rótula nesse ponto."); return; }
+    alterar(function (mm) { var id = est.proximoId++; mm.rotulas.push({ id: id, x: x }); est.sel = { k: "rotulas", id: id }; });
+  }
+
+  function apagar(k, id) {
+    if (est.sel && est.sel.k === k && est.sel.id === id) est.sel = null;
+    alterar(function (m) { m[k] = m[k].filter(function (e) { return e.id !== id; }); });
+  }
+
+  function editar(k, id) {
+    var e = acharElemento(k, id);
+    if (!e) return;
+    est.sel = { k: k, id: id };
+    desenhar(); painel();
+    if (k === "apoios") dialogoApoio(e);
+    else if (k === "rotulas") dialogoRotula(e);
+    else if (k === "forcas") dialogoForca(e);
+    else if (k === "momentos") dialogoMomento(e);
+    else dialogoDistribuida(e);
+  }
+
+  function acrescentar(k) {
+    var L = est.modelo.L, x = arred(Math.round(L / 2 / 0.05) * 0.05);
+    if (k === "apoios") dialogoApoio(null, x);
+    else if (k === "rotulas") dialogoRotula(null, x);
+    else if (k === "forcas") dialogoForca(null, x);
+    else if (k === "momentos") dialogoMomento(null, x);
+    else dialogoDistribuida(null, 0, L);
+  }
+
+  function moverSelecionado(sinal) {
+    var s = est.sel;
+    if (!s) return;
+    var e = acharElemento(s.k, s.id), L = est.modelo.L, passo = est.grelha > 0 ? est.grelha : 0.01;
+    if (!e) return;
+    var antes = JSON.stringify(est.modelo);
+    if (s.k === "distribuidas") {
+      var comp = e.x2 - e.x1, nx = arred(clamp(e.x1 + sinal * passo, 0, L - comp));
+      e.x1 = nx; e.x2 = arred(nx + comp);
+    } else e.x = arred(clamp(e.x + sinal * passo, 0, L));
+    if (S.resolver(est.modelo).erros.length) { est.modelo = JSON.parse(antes); return; }
+    est.hist.push(antes); est.fut = [];
+    atualizar();
+  }
+
+  function mudarComprimento(texto) {
+    var L = lerNum(texto), m = est.modelo;
+    if (!(L > 0) || L > 1000) { aviso("O comprimento tem de ser um número positivo."); $("comprimento").value = fmt(m.L); return; }
+    L = arred(L);
+    if (Math.abs(L - m.L) < 1e-9) { $("comprimento").value = fmt(m.L); return; }
+    var antes = 0;
+    TIPOS.forEach(function (k) { antes += m[k].length; });
+    alterar(function (mm) {
+      // o que estava na extremidade direita acompanha-a
+      var Lv = mm.L;
+      function fim(x) { return Math.abs(x - Lv) < 1e-9 ? L : x; }
+      mm.apoios.forEach(function (a) { a.x = fim(a.x); });
+      mm.forcas.forEach(function (f) { f.x = fim(f.x); });
+      mm.momentos.forEach(function (q) { q.x = fim(q.x); });
+      mm.distribuidas.forEach(function (d) { d.x2 = fim(d.x2); });
+      mm.L = L;
+      mm.apoios = mm.apoios.filter(function (a) { return a.x <= L + 1e-9; });
+      mm.rotulas = mm.rotulas.filter(function (r) { return r.x < L - 1e-9; });
+      mm.forcas = mm.forcas.filter(function (f) { return f.x <= L + 1e-9; });
+      mm.momentos = mm.momentos.filter(function (q) { return q.x <= L + 1e-9; });
+      mm.distribuidas = mm.distribuidas.filter(function (d) { return d.x1 < L - 1e-9; });
+      mm.distribuidas.forEach(function (d) {
+        if (d.x2 > L) { d.q2 = d.q1 + (d.q2 - d.q1) * (L - d.x1) / (d.x2 - d.x1); d.q2 = arred(d.q2); d.x2 = L; }
+      });
+    });
+    var depois = 0;
+    TIPOS.forEach(function (k) { depois += est.modelo[k].length; });
+    $("comprimento").value = fmt(est.modelo.L);
+    if (depois < antes) aviso((antes - depois) + " elemento(s) ficaram fora da viga e foram retirados. Ctrl+Z desfaz.");
+  }
+
+  // ------------------------------------------------------------ diálogos
+
+  // O conteúdo de cada diálogo vive num elemento novo: os ouvintes de um
+  // diálogo morrem com ele e não se acumulam no seguinte.
+  function abrirDialogo(html, aoAbrir, largo) {
+    var fundo = $("fundo-dialogo"), caixa = $("dialogo");
+    caixa.className = "dialogo" + (largo ? " largo" : "");
+    caixa.innerHTML = "";
+    var d = document.createElement("div");
+    d.innerHTML = html;
+    caixa.appendChild(d);
+    fundo.hidden = false;
+    est.dialogo = true;
+    if (aoAbrir) aoAbrir(d);
+    var primeiro = d.querySelector("input[type=text]") || d.querySelector("button.principal") || d.querySelector("button");
+    if (primeiro) {
+      try { primeiro.focus({ preventScroll: true }); } catch (e) { primeiro.focus(); }
+      if (primeiro.select) primeiro.select();
+    }
+    caixa.scrollTop = 0;
+  }
+
+  function fecharDialogo() {
+    $("fundo-dialogo").hidden = true;
+    $("dialogo").innerHTML = "";
+    est.dialogo = false;
+  }
+
+  function opcoes(grupo, lista, ativa) {
+    return '<div class="opcoes" data-grupo="' + grupo + '">' + lista.map(function (o) {
+      return '<button type="button" data-v="' + o[0] + '"' + (o[0] === ativa ? ' class="ativa"' : "") + ">" + o[1] + "</button>";
+    }).join("") + "</div>";
+  }
+  function lerOpcao(d, grupo) { var b = d.querySelector('[data-grupo="' + grupo + '"] .ativa'); return b ? b.getAttribute("data-v") : null; }
+  function campoNum(id, valor, unidade) {
+    return '<input type="text" inputmode="decimal" id="' + id + '" value="' + esc(valor) + '">' + (unidade ? '<span class="unidade">' + unidade + "</span>" : "");
+  }
+  function valorCampo(d, id) { var e = d.querySelector("#" + id); return e ? lerNum(e.value) : NaN; }
+
+  // cfg: titulo, linhas [[rótulo, html]], previa, aoMudar(d), ler(d) -> {erro} | {valores}, confirmar(v), apagar
+  function dialogoForm(cfg) {
+    var html = "<h2>" + cfg.titulo + '</h2><div class="form">' + cfg.linhas.map(function (l) {
+      return '<label' + (l[2] ? ' data-linha="' + l[2] + '"' : "") + ">" + l[0] + '</label><div class="campo"' +
+        (l[2] ? ' data-linha="' + l[2] + '"' : "") + ">" + l[1] + "</div>";
+    }).join("") + "</div>" + (cfg.previa ? '<div class="previa" id="d-previa"></div>' : "") +
+      '<div class="erro-form" id="d-erro"></div><div class="botoes">' +
+      (cfg.apagar ? '<button type="button" data-d="apagar" style="margin-right:auto">Apagar</button>' : "") +
+      '<button type="button" data-d="cancelar">Cancelar</button><button type="button" class="principal" data-d="ok">OK</button></div>';
+    abrirDialogo(html, function (d) {
+      function upd() {
+        if (!est.dialogo) return;
+        if (cfg.aoMudar) cfg.aoMudar(d);
+        var r = cfg.ler(d);
+        $("d-erro").textContent = r.erro && r.mostrar !== false ? r.erro : "";
+      }
+      function ok() {
+        if (!est.dialogo) return;
+        var r = cfg.ler(d);
+        if (r.erro) { $("d-erro").textContent = r.erro; return; }
+        fecharDialogo();
+        cfg.confirmar(r.valores);
+      }
+      d.addEventListener("input", upd);
+      d.addEventListener("change", upd);
+      d.addEventListener("click", function (ev) {
+        var b = ev.target.closest("button");
+        if (!b) return;
+        var g = b.parentNode && b.parentNode.getAttribute && b.parentNode.getAttribute("data-grupo");
+        if (g && !b.disabled) {
+          Array.prototype.forEach.call(b.parentNode.children, function (c) { c.classList.toggle("ativa", c === b); });
+          if (cfg.aoClicarOpcao) cfg.aoClicarOpcao(d, g, b.getAttribute("data-v"));
+          upd();
+          return;
+        }
+        var acao = b.getAttribute("data-d");
+        if (acao === "ok") ok();
+        else if (acao === "cancelar") fecharDialogo();
+        else if (acao === "apagar") { fecharDialogo(); cfg.apagar(); }
+      });
+      d.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter") { ev.preventDefault(); ok(); }
+      });
+      if (cfg.aoMudar) cfg.aoMudar(d);
+      var r = cfg.ler(d);
+      if (r.erro && r.mostrar !== false) $("d-erro").textContent = r.erro;
+    });
+  }
+
+  function lerX(d, id, L) {
+    var x = valorCampo(d, id);
+    if (!isFinite(x)) return { erro: "Escreva a posição em metros." };
+    if (x < -1e-9 || x > L + 1e-9) return { erro: "A posição tem de estar entre 0 e " + fmt(L) + " m." };
+    return { x: arred(clamp(x, 0, L)) };
+  }
+
+  function dialogoApoio(e, x) {
+    var L = est.modelo.L, tipo = e ? e.tipo : (est.ultimo.apoio || "fixo");
+    dialogoForm({
+      titulo: e ? "Editar apoio" : "Novo apoio",
+      linhas: [
+        ["Tipo", opcoes("tipo", [["movel", "Móvel"], ["fixo", "Fixo"], ["encastramento", "Encastramento"]], tipo)],
+        ["Posição x", campoNum("d-x", fmt(e ? e.x : x), "m")],
+        ["Inclinação da reação", campoNum("d-ang", fmt(e && e.tipo === "movel" ? e.angulo || 0 : 0), "° com a vertical"), "ang"]
+      ],
+      aoMudar: function (d) {
+        var movel = lerOpcao(d, "tipo") === "movel";
+        Array.prototype.forEach.call(d.querySelectorAll('[data-linha="ang"]'), function (n) { n.style.display = movel ? "" : "none"; });
+      },
+      ler: function (d) {
+        var t = lerOpcao(d, "tipo"), px = lerX(d, "d-x", L);
+        if (px.erro) return px;
+        var ang = t === "movel" ? valorCampo(d, "d-ang") : 0;
+        if (!isFinite(ang) || Math.abs(ang) > 90) return { erro: "A inclinação da reação vai de -90° a 90° (0° = vertical)." };
+        var outro = est.modelo.apoios.some(function (a) { return (!e || a.id !== e.id) && Math.abs(a.x - px.x) < 1e-9; });
+        if (outro) return { erro: "Já há um apoio em x = " + fmt(px.x) + " m." };
+        return { valores: { tipo: t, x: px.x, angulo: arred(ang) } };
+      },
+      confirmar: function (v) {
+        est.ultimo.apoio = v.tipo;
+        alterar(function (m) {
+          if (e) { var a = acharElemento("apoios", e.id); a.tipo = v.tipo; a.x = v.x; a.angulo = v.angulo; }
+          else { var id = est.proximoId++; m.apoios.push({ id: id, x: v.x, tipo: v.tipo, angulo: v.angulo }); est.sel = { k: "apoios", id: id }; }
+        });
+      },
+      apagar: e ? function () { apagar("apoios", e.id); } : null
+    });
+  }
+
+  function dialogoRotula(e, x) {
+    var L = est.modelo.L;
+    dialogoForm({
+      titulo: e ? "Editar rótula" : "Nova rótula",
+      linhas: [["Posição x", campoNum("d-x", fmt(e ? e.x : x), "m")]],
+      ler: function (d) {
+        var px = lerX(d, "d-x", L);
+        if (px.erro) return px;
+        if (px.x <= 1e-9 || px.x >= L - 1e-9) return { erro: "Uma rótula tem de ficar no interior da viga." };
+        if (est.modelo.rotulas.some(function (r) { return (!e || r.id !== e.id) && Math.abs(r.x - px.x) < 1e-9; })) return { erro: "Já há uma rótula nesse ponto." };
+        return { valores: { x: px.x } };
+      },
+      confirmar: function (v) {
+        alterar(function (m) {
+          if (e) acharElemento("rotulas", e.id).x = v.x;
+          else { var id = est.proximoId++; m.rotulas.push({ id: id, x: v.x }); est.sel = { k: "rotulas", id: id }; }
+        });
+      },
+      apagar: e ? function () { apagar("rotulas", e.id); } : null
+    });
+  }
+
+  function previaForca(d, F, alfa) {
+    var cx = 70, cy = 58, len = 44, a = alfa * Math.PI / 180, ux = Math.cos(a), uy = -Math.sin(a), s = "";
+    var hx = cx + ux * len / 2, hy = cy + uy * len / 2, tx = cx - ux * len / 2, ty = cy - uy * len / 2;
+    s += linha(10, cy, 130, cy, "#E1E6EB", 1) + linha(cx, 8, cx, 108, "#E1E6EB", 1);
+    if (Math.abs(ux) > 1e-6 && Math.abs(uy) > 1e-6) {
+      s += seta(tx, ty, hx, ty, COR.carga, 1.1, true) + seta(hx, ty, hx, hy, COR.carga, 1.1, true);
+    }
+    s += seta(tx, ty, hx, hy, COR.carga, 2.4);
+    var c = S.componentesForca({ F: F, alfa: alfa });
+    var info = "F<sub>x</sub> = " + fmt(Math.abs(c.Fx)) + " kN " + (c.Fx > 1e-9 ? "→" : c.Fx < -1e-9 ? "←" : "") +
+      "<br>F<sub>y</sub> = " + fmt(Math.abs(c.Fy)) + " kN " + (c.Fy > 1e-9 ? "↑" : c.Fy < -1e-9 ? "↓" : "") +
+      '<br><span style="color:#7B8794;font-size:12px">' + esc(descreverDirecao(alfa)) + "</span>";
+    $("d-previa").innerHTML = '<svg width="140" height="116" viewBox="0 0 140 116">' + s + '</svg><div class="info">' + info + "</div>";
+  }
+
+  function dialogoForca(e, x) {
+    var L = est.modelo.L, u = est.ultimo.forca || { F: 10, alfa: 270 };
+    var F0 = e ? e.F : u.F, an = angulosDeAlfa(e ? e.alfa : u.alfa);
+    dialogoForm({
+      titulo: e ? "Editar força" : "Nova força",
+      previa: true,
+      linhas: [
+        ["Posição x", campoNum("d-x", fmt(e ? e.x : x), "m")],
+        ["Intensidade F", campoNum("d-F", fmt(F0), "kN")],
+        ["Ângulo com a horizontal", campoNum("d-th", fmt(an.theta, an.theta % 1 ? 2 : 0), "°") +
+          opcoes("atalho", [["90", "90°"], ["0", "0°"], ["30", "30°"], ["45", "45°"], ["60", "60°"]], "")],
+        ["Sentido horizontal", opcoes("sh", [["dir", "→ para a direita"], ["esq", "← para a esquerda"]], an.sh)],
+        ["Sentido vertical", opcoes("sv", [["baixo", "↓ para baixo"], ["cima", "↑ para cima"]], an.sv)]
+      ],
+      aoClicarOpcao: function (d, g, v) {
+        if (g === "atalho") {
+          d.querySelector("#d-th").value = v;
+          Array.prototype.forEach.call(d.querySelectorAll('[data-grupo="atalho"] button'), function (b) { b.classList.remove("ativa"); });
+        }
+      },
+      aoMudar: function (d) {
+        var th = valorCampo(d, "d-th"), F = valorCampo(d, "d-F");
+        Array.prototype.forEach.call(d.querySelectorAll('[data-grupo="sh"] button'), function (b) { b.disabled = Math.abs(th - 90) < 1e-9; });
+        Array.prototype.forEach.call(d.querySelectorAll('[data-grupo="sv"] button'), function (b) { b.disabled = Math.abs(th) < 1e-9; });
+        if (isFinite(th) && th >= 0 && th <= 90 && isFinite(F) && F > 0) previaForca(d, F, alfaDeAngulos(th, lerOpcao(d, "sh"), lerOpcao(d, "sv")));
+        else $("d-previa").innerHTML = "";
+      },
+      ler: function (d) {
+        var px = lerX(d, "d-x", L);
+        if (px.erro) return px;
+        var F = valorCampo(d, "d-F"), th = valorCampo(d, "d-th");
+        if (!(F > 0)) return { erro: "A intensidade tem de ser positiva; o sentido escolhe-se em baixo." };
+        if (!(th >= 0 && th <= 90)) return { erro: "O ângulo com a horizontal vai de 0° a 90°." };
+        return { valores: { x: px.x, F: arred(F), alfa: alfaDeAngulos(th, lerOpcao(d, "sh"), lerOpcao(d, "sv")) } };
+      },
+      confirmar: function (v) {
+        est.ultimo.forca = { F: v.F, alfa: v.alfa };
+        alterar(function (m) {
+          if (e) { var f = acharElemento("forcas", e.id); f.x = v.x; f.F = v.F; f.alfa = v.alfa; }
+          else { var id = est.proximoId++; m.forcas.push({ id: id, x: v.x, F: v.F, alfa: v.alfa }); est.sel = { k: "forcas", id: id }; }
+        });
+      },
+      apagar: e ? function () { apagar("forcas", e.id); } : null
+    });
+  }
+
+  function dialogoMomento(e, x) {
+    var L = est.modelo.L, u = est.ultimo.momento || { M: 10, sentido: "horario" };
+    dialogoForm({
+      titulo: e ? "Editar momento" : "Novo momento",
+      linhas: [
+        ["Posição x", campoNum("d-x", fmt(e ? e.x : x), "m")],
+        ["Intensidade M", campoNum("d-M", fmt(e ? e.M : u.M), "kN·m")],
+        ["Sentido", opcoes("sentido", [["horario", "↻ horário"], ["anti-horario", "↺ anti-horário"]], e ? e.sentido : u.sentido)]
+      ],
+      ler: function (d) {
+        var px = lerX(d, "d-x", L);
+        if (px.erro) return px;
+        var M = valorCampo(d, "d-M");
+        if (!(M > 0)) return { erro: "A intensidade tem de ser positiva; o sentido escolhe-se em baixo." };
+        return { valores: { x: px.x, M: arred(M), sentido: lerOpcao(d, "sentido") } };
+      },
+      confirmar: function (v) {
+        est.ultimo.momento = { M: v.M, sentido: v.sentido };
+        alterar(function (m) {
+          if (e) { var q = acharElemento("momentos", e.id); q.x = v.x; q.M = v.M; q.sentido = v.sentido; }
+          else { var id = est.proximoId++; m.momentos.push({ id: id, x: v.x, M: v.M, sentido: v.sentido }); est.sel = { k: "momentos", id: id }; }
+        });
+      },
+      apagar: e ? function () { apagar("momentos", e.id); } : null
+    });
+  }
+
+  function dialogoDistribuida(e, x1, x2) {
+    var L = est.modelo.L, u = est.ultimo.dist || { q1: 10, q2: 10 };
+    var q1 = e ? e.q1 : u.q1, q2 = e ? e.q2 : u.q2, unif = Math.abs(q1 - q2) < 1e-9;
+    // as intensidades escrevem-se positivas e o sentido escolhe-se à parte, como nas forças
+    var sg = (Math.abs(q1) >= Math.abs(q2) ? q1 : q2) < 0 ? -1 : 1;
+    dialogoForm({
+      titulo: e ? "Editar carga distribuída" : "Nova carga distribuída",
+      previa: true,
+      linhas: [
+        ["Início x<sub>1</sub>", campoNum("d-x1", fmt(e ? e.x1 : x1), "m")],
+        ["Fim x<sub>2</sub>", campoNum("d-x2", fmt(e ? e.x2 : x2), "m")],
+        ["Forma", opcoes("forma", [["uniforme", "Uniforme"], ["variavel", "Triangular ou trapezoidal"]], unif ? "uniforme" : "variavel")],
+        ["q no início", campoNum("d-q1", fmt(q1 * sg), "kN/m")],
+        ["q no fim", campoNum("d-q2", fmt(q2 * sg), "kN/m"), "q2"],
+        ["Sentido", opcoes("sentido", [["baixo", "↓ para baixo"], ["cima", "↑ para cima"]], sg > 0 ? "baixo" : "cima")]
+      ],
+      aoMudar: function (d) {
+        var uni = lerOpcao(d, "forma") === "uniforme";
+        Array.prototype.forEach.call(d.querySelectorAll('[data-linha="q2"]'), function (n) { n.style.display = uni ? "none" : ""; });
+        var r = this.ler(d);
+        var pv = $("d-previa");
+        if (r.erro) { pv.innerHTML = ""; return; }
+        var v = r.valores, R = S.resultanteDistribuida(v);
+        pv.innerHTML = '<div class="info">Resultante: <b>R = ' + fmt(Math.abs(R.F)) + " kN " + (R.F > 1e-9 ? "↓" : R.F < -1e-9 ? "↑" : "") +
+          "</b>" + (R.x !== null ? " a x = <b>" + fmt(R.x) + " m</b>" : "") + "</div>";
+      },
+      ler: function (d) {
+        var a = lerX(d, "d-x1", L);
+        if (a.erro) return a;
+        var b = lerX(d, "d-x2", L);
+        if (b.erro) return b;
+        if (b.x - a.x < 1e-6) return { erro: "O fim tem de estar à direita do início." };
+        var uni = lerOpcao(d, "forma") === "uniforme";
+        var v1 = valorCampo(d, "d-q1"), v2 = uni ? v1 : valorCampo(d, "d-q2");
+        if (!isFinite(v1) || !isFinite(v2)) return { erro: "Escreva os valores da carga em kN/m." };
+        if (v1 < 0 || v2 < 0) return { erro: "As intensidades são positivas; o sentido escolhe-se em baixo." };
+        if (v1 < 1e-12 && v2 < 1e-12) return { erro: "A carga não pode ser nula nas duas extremidades." };
+        var s = lerOpcao(d, "sentido") === "cima" ? -1 : 1;
+        return { valores: { x1: a.x, x2: b.x, q1: arred(v1 * s), q2: arred(v2 * s) } };
+      },
+      confirmar: function (v) {
+        est.ultimo.dist = { q1: v.q1, q2: v.q2 };
+        alterar(function (m) {
+          if (e) { var dd = acharElemento("distribuidas", e.id); dd.x1 = v.x1; dd.x2 = v.x2; dd.q1 = v.q1; dd.q2 = v.q2; }
+          else { var id = est.proximoId++; m.distribuidas.push({ id: id, x1: v.x1, x2: v.x2, q1: v.q1, q2: v.q2 }); est.sel = { k: "distribuidas", id: id }; }
+        });
+      },
+      apagar: e ? function () { apagar("distribuidas", e.id); } : null
+    });
+  }
+
+  function figuraConvencao() {
+    var s = '<svg width="420" height="150" viewBox="0 0 420 150" font-family="' + FONTE + '">';
+    s += '<rect x="186" y="50" width="48" height="50" fill="#DCE4EC" stroke="' + COR.azul + '" stroke-width="1.5"/>';
+    s += texto(210, 81, "S", { tam: 16, peso: 700, cor: COR.azul });
+    s += linha(100, 75, 186, 75, COR.azul, 1, ' stroke-dasharray="5 3"') + linha(234, 75, 320, 75, COR.azul, 1, ' stroke-dasharray="5 3"');
+    // à esquerda da secção
+    s += seta(120, 75, 60, 75, COR.reacao, 2) + texto(56, 70, "N", { ancora: "end", peso: 700, tam: 13 });
+    s += seta(160, 112, 160, 42, COR.reacao, 2) + texto(150, 38, "V", { ancora: "end", peso: 700, tam: 13 });
+    s += arco(132, 75, 22, 200, 340, COR.reacao, 2) + texto(110, 44, "M", { ancora: "end", peso: 700, tam: 13 });
+    // à direita
+    s += seta(300, 75, 360, 75, COR.reacao, 2) + texto(364, 70, "N", { ancora: "start", peso: 700, tam: 13 });
+    s += seta(260, 42, 260, 112, COR.reacao, 2) + texto(270, 38, "V", { ancora: "start", peso: 700, tam: 13 });
+    s += arco(288, 75, 22, 340, 200, COR.reacao, 2) + texto(310, 44, "M", { ancora: "start", peso: 700, tam: 13 });
+    s += texto(90, 140, "à esquerda da secção", { tam: 11, cor: COR.cinza }) + texto(330, 140, "à direita da secção", { tam: 11, cor: COR.cinza });
+    return s + "</svg>";
+  }
+
+  function dialogoAjuda() {
+    var html = "<h2>Diagramas de Esforços</h2>" +
+      "<h3>Como usar</h3><ul>" +
+      "<li>Escolha uma ferramenta na barra e clique na viga para pôr apoios, rótulas, forças, momentos ou cargas distribuídas. As posições acertam pela grelha e pelos elementos já postos.</li>" +
+      "<li>Numa carga distribuída, clique no início e arraste até ao fim.</li>" +
+      "<li>Com <b>Selecionar</b>, arraste um elemento ao longo da viga. Duplo clique edita os valores; o botão direito ou a tecla <kbd>Delete</kbd> apaga; as setas <kbd>←</kbd> <kbd>→</kbd> deslocam o elemento selecionado.</li>" +
+      "<li>No separador <b>Elementos</b> pode escrever todos os valores, sem usar o rato.</li>" +
+      "<li>Os resultados atualizam-se a cada alteração. Passe o rato sobre o desenho para ler N, V e M; clique num diagrama, ou escreva o x em <b>Esforços numa secção</b>, para fixar uma secção.</li>" +
+      "<li><kbd>Ctrl</kbd>+<kbd>Z</kbd> desfaz e <kbd>Ctrl</kbd>+<kbd>Y</kbd> refaz (<kbd>⌘</kbd> no Mac). A última viga fica guardada neste browser; <b>Guardar</b> cria um ficheiro para a abrir noutro computador.</li></ul>" +
+      "<h3>Duas convenções de sinais</h3>" +
+      "<p>Os números deste programa usam duas convenções diferentes, e cada quadro diz qual é a sua.</p>" +
+      '<p><span class="conv equilibrio">→ + &nbsp;↑ + &nbsp;↺ +</span> <b>Equações de equilíbrio</b>: reações e verificação do equilíbrio.</p><ul>' +
+      "<li>Positivo para a direita, para cima e no sentido anti-horário.</li>" +
+      "<li>Um valor negativo quer dizer que a reação tem o sentido contrário. No desenho, as setas mostram o sentido real e o valor vem sem sinal.</li></ul>" +
+      '<p><span class="conv seccao">convenção da secção</span> <b>Esforços</b>: diagramas de N, V e M e quadros de esforços.</p>' +
+      '<div class="convencao">' + figuraConvencao() + "</div><ul>" +
+      "<li><b>N</b> positivo de tração; <b>V</b> positivo quando a resultante das forças à esquerda da secção aponta para cima; <b>M</b> positivo quando traciona a fibra inferior.</li>" +
+      "<li>O diagrama de M desenha-se do lado das fibras tracionadas: os momentos positivos ficam por baixo do eixo.</li></ul>" +
+      "<p>As duas convenções são independentes, e o sinal de uma reação não dá o sinal do esforço junto ao apoio:</p><ul>" +
+      "<li>numa consola encastrada à esquerda, com a carga para baixo, a reação M<sub>A</sub> é positiva (↺) e o momento fletor em A é negativo; encastrada à direita, são ambos negativos;</li>" +
+      "<li>numa viga simplesmente apoiada, a reação vertical no apoio da direita é positiva (↑) e o esforço transverso junto a ele é negativo;</li>" +
+      "<li>num apoio fixo à esquerda, uma reação horizontal positiva (→) empurra a viga, e o esforço axial junto a ele é de compressão (negativo).</li></ul>" +
+      "<p>As cargas não levam sinal: forças, momentos e cargas distribuídas escrevem-se com a intensidade, e o sentido escolhe-se à parte.</p>" +
+      "<h3>Âmbito</h3><ul>" +
+      "<li>Vigas de eixo reto e horizontal, com cargas no plano da viga.</li>" +
+      "<li>Classificação pela contagem g = r − 3 − e (r reações, e rótulas) e pela disposição dos vínculos.</li>" +
+      "<li>Isostáticas: reações pelas equações de equilíbrio. Hiperestáticas: resolvidas admitindo EI e EA constantes ao longo da viga; as reações dependem da rigidez, e esse cálculo não faz parte da matéria de Estática.</li></ul>" +
+      '<p style="color:#7B8794;font-size:12px;margin-top:14px">Estática · 2026/2027 · Paulo Mendes. Adaptado do módulo de diagramas do StructuralTool (Paulo Mendes, licença MIT).</p>' +
+      '<div class="botoes"><button type="button" class="principal" data-d="fechar">Fechar</button></div>';
+    abrirDialogo(html, function (d) {
+      d.querySelector('[data-d="fechar"]').addEventListener("click", fecharDialogo);
+    }, true);
+  }
+
+  // ------------------------------------------------------------ painel lateral
+
+  // cada quadro diz em que convenção de sinais estão os seus números
+  var CONV_EQUILIBRIO = '<span class="conv equilibrio" title="Convenção das equações de equilíbrio: positivo para a direita, para cima e no sentido anti-horário">→ + &nbsp;↑ + &nbsp;↺ +</span>';
+  var CONV_SECCAO = '<span class="conv seccao" title="N positivo de tração; V positivo com a resultante à esquerda para cima; M positivo a tracionar a fibra inferior">convenção da secção</span>';
+
+  function seta4(v, eixo) {
+    if (Math.abs(v) < 0.005) return "";
+    if (eixo === "H") return v > 0 ? "→" : "←";
+    if (eixo === "V") return v > 0 ? "↑" : "↓";
+    if (eixo === "M") return v > 0 ? "↺" : "↻";
+    return "";
+  }
+
+  function htmlClassificacao(res) {
+    if (res.erros.length) {
+      return '<div class="cartao classe erro"><div class="veredicto">Dados por corrigir</div><ul>' +
+        res.erros.map(function (e) { return "<li>" + esc(e) + "</li>"; }).join("") + "</ul></div>";
+    }
+    var c = res.classificacao;
+    var cont = '<div class="contagem">r = ' + c.r + " reações · e = " + c.e + " rótula" + (c.e === 1 ? "" : "s") +
+      " · g = r − 3 − e = <b>" + c.g + "</b></div>";
+    if (c.tipo === "isostatica")
+      return '<div class="cartao classe isostatica"><div class="veredicto">Viga isostática</div>' + cont + "</div>";
+    if (c.tipo === "hiperestatica")
+      return '<div class="cartao classe hiperestatica"><div class="veredicto">Viga hiperestática de grau ' + c.g + "</div>" + cont +
+        '<p class="nota">As reações dependem da rigidez: foram calculadas admitindo EI e EA constantes ao longo da viga. Este cálculo não faz parte da matéria de Estática.</p></div>';
+    return '<div class="cartao classe hipostatica"><div class="veredicto">Viga hipostática</div>' + cont +
+      '<p class="nota" style="color:#7A1F1F">' + esc(c.motivo) + " Sem equilíbrio para um carregamento qualquer, não há diagramas.</p></div>";
+  }
+
+  function htmlReacoes(res) {
+    var s = '<div class="cartao"><h3>Reações de apoio ' + CONV_EQUILIBRIO + "</h3>", L = est.modelo.L, enc = [];
+    res.reacoes.forEach(function (R) {
+      // num encastramento de extremidade, a reação M e o momento fletor nessa secção têm o mesmo valor absoluto
+      if (R.tipo === "encastramento" && Math.abs(R.M) >= 0.005 && (R.x <= 1e-9 || R.x >= L - 1e-9)) {
+        var Mf = res.esforcos(R.x, R.x <= 1e-9 ? "dir" : "esq").M;
+        enc.push(" Em " + esc(R.nome) + ", a reação " + nomeHtml("M", R.nome) + " vale " + fmt(R.M) + " kN·m e o momento fletor " +
+          fmt(Mf) + " kN·m: o mesmo valor, com o sinal de cada convenção.");
+      }
+      var nome = R.nome;
+      s += '<div class="apoio-cab">' + esc(nome) + " <span>· " + NOME_APOIO[R.tipo].toLowerCase() + " em x = " + fmt(R.x) + " m</span></div>";
+      function linhaR(rot, v, eixo, un) {
+        return '<div class="reacao"><span>' + rot + '</span><span><span class="val">' + fmt(v) + " " + un + '</span> <span class="seta">' + seta4(v, eixo) + "</span></span></div>";
+      }
+      if (R.tipo === "movel") {
+        if (Math.abs(R.angulo || 0) > 1e-9) {
+          s += linhaR(nomeHtml("R", nome) + " (a " + fmtAng(R.angulo) + " da vertical)", R.R, "R", "kN");
+          s += linhaR(nomeHtml("R", nome + "h"), R.H, "H", "kN");
+          s += linhaR(nomeHtml("R", nome + "v"), R.V, "V", "kN");
+        } else s += linhaR(nomeHtml("R", nome), R.V, "V", "kN");
+      } else {
+        s += linhaR(nomeHtml("R", nome + "h"), R.H, "H", "kN");
+        s += linhaR(nomeHtml("R", nome + "v"), R.V, "V", "kN");
+        if (R.tipo === "encastramento") s += linhaR(nomeHtml("M", nome), R.M, "M", "kN·m");
+      }
+    });
+    return s + '<p class="nota">Sinais das equações de equilíbrio: → +, ↑ +, ↺ +; a seta indica o sentido real. ' +
+      "N, V e M seguem a convenção da secção, e os sinais não se comparam com estes." + enc.join("") + "</p></div>";
+  }
+
+  function htmlEquilibrio(res) {
+    var e = res.equilibrio;
+    function v(nome, val, un) {
+      var ok = Math.abs(val) < 0.005;
+      return "<span>" + nome + " = " + fmt(val) + " " + un + ' <span class="' + (ok ? "ok" : "") + '">' + (ok ? "✓" : "✗") + "</span></span>";
+    }
+    return '<div class="cartao"><h3>Verificação do equilíbrio ' + CONV_EQUILIBRIO + '</h3><div class="verif">' +
+      v("ΣF<sub>x</sub>", e.Fx, "kN") + v("ΣF<sub>y</sub>", e.Fy, "kN") + v("ΣM<sub>" + esc(e.ref) + "</sub>", e.M, "kN·m") +
+      '</div><p class="nota">Com todas as cargas e reações. Momentos em relação a ' + esc(e.ref) + ".</p></div>";
+  }
+
+  function htmlSeccao() {
+    return '<div class="cartao cartao-seccao' + (est.seccao === null ? " sem-valor" : "") +
+      '" id="cartao-seccao"><h3>Esforços numa secção ' + CONV_SECCAO + '</h3><div class="seccao-entrada">x =<input type="text" inputmode="decimal" id="seccao-x" value="' +
+      (est.seccao === null ? "" : fmt(est.seccao)) + '"> m <span class="nota" style="margin:0">ou clique num diagrama</span></div><div id="seccao-valores"></div></div>';
+  }
+
+  function atualizarSeccao() {
+    var alvo = $("seccao-valores"), res = est.res;
+    if (!alvo || !res || !res.esforcos) return;
+    $("cartao-seccao").classList.toggle("sem-valor", est.seccao === null);
+    if (est.seccao === null) { alvo.innerHTML = ""; return; }
+    var x = est.seccao, e = res.esforcos(x, "esq"), d = res.esforcos(x, "dir");
+    var salto = ["N", "V", "M"].some(function (k) { return Math.abs(e[k] - d[k]) >= 0.005; }) && x > 1e-9 && x < est.modelo.L - 1e-9;
+    var cab = "<tr><th></th><th>N (kN)</th><th>V (kN)</th><th>M (kN·m)</th></tr>";
+    function lin(rot, v) { return "<tr><td>" + rot + "</td><td>" + fmt(v.N) + "</td><td>" + fmt(v.V) + "</td><td>" + fmt(v.M) + "</td></tr>"; }
+    var corpo = salto ? lin('<span class="lado">à esquerda</span>', e) + lin('<span class="lado">à direita</span>', d)
+      : lin("x = " + fmt(x) + " m", x >= est.modelo.L - 1e-9 ? e : d);
+    alvo.innerHTML = '<table class="quadro">' + cab + corpo + "</table>";
+  }
+
+  function htmlMaximos(res) {
+    var mx = res.maximos, s = '<div class="cartao"><h3>Valores extremos ' + CONV_SECCAO + "</h3>";
+    function lin(rot, e, un, extra) {
+      if (!e) return "";
+      return '<div class="linha-max"><span>' + rot + " = <b>" + fmt(e.valor) + " " + un + "</b></span><span>x = " + fmt(e.x) + " m" + (extra || "") + "</span></div>";
+    }
+    function emV0(e) {
+      return e && (res.extremos || []).some(function (z) { return Math.abs(z.x - e.x) < 1e-6; }) ? " (V = 0)" : "";
+    }
+    s += lin("M máximo", mx.Mmax, "kN·m", emV0(mx.Mmax));
+    s += lin("M mínimo", mx.Mmin, "kN·m", emV0(mx.Mmin));
+    s += lin("V máximo", mx.Vmax, "kN");
+    s += lin("V mínimo", mx.Vmin, "kN");
+    s += lin("N máximo (tração)", mx.Nmax, "kN");
+    s += lin("N mínimo (compressão)", mx.Nmin, "kN");
+    if (res.zerosM && res.zerosM.length)
+      s += '<div class="linha-max"><span>M = 0 (no interior de um troço)</span><span>x = ' + res.zerosM.map(function (x) { return fmt(x); }).join("; ") + " m</span></div>";
+    return s + "</div>";
+  }
+
+  function htmlQuadro(res) {
+    var L = est.modelo.L, linhas = [];
+    res.pontos.forEach(function (p) {
+      var nome = p.nome ? "<b>" + esc(p.nome) + "</b> " : "";
+      var desc = nome + esc(p.descricao.replace(/^apoio [A-Z]+(, )?/, "")).trim();
+      if (p.x <= 1e-9) linhas.push({ x: p.x, h: [fmt(p.x), desc, p.dir] });
+      else if (p.x >= L - 1e-9) linhas.push({ x: p.x, h: [fmt(p.x), desc, p.esq] });
+      else if (p.salto) {
+        linhas.push({ x: p.x, h: [fmt(p.x), desc + ' <span class="lado">esq.</span>', p.esq] });
+        linhas.push({ x: p.x, h: ["", '<span class="lado">dir.</span>', p.dir], cls: "salto-dir" });
+      } else linhas.push({ x: p.x, h: [fmt(p.x), desc, p.dir] });
+    });
+    (res.extremos || []).forEach(function (e) {
+      linhas.push({ x: e.x, h: [fmt(e.x), "V = 0, M extremo", res.esforcos(e.x)], cls: "especial" });
+    });
+    (res.zerosM || []).forEach(function (x) {
+      linhas.push({ x: x, h: [fmt(x), "M = 0", res.esforcos(x)], cls: "especial" });
+    });
+    linhas.sort(function (a, b) { return a.x - b.x; });
+    var s = '<div class="cartao"><h3>Esforços nos pontos notáveis ' + CONV_SECCAO + '</h3><div class="convencao pequena">' + legendaSeccao() +
+      '</div><table class="quadro"><tr><th>x (m)</th><th style="text-align:left">ponto</th><th>N (kN)</th><th>V (kN)</th><th>M (kN·m)</th></tr>';
+    linhas.forEach(function (l) {
+      var v = l.h[2];
+      s += '<tr class="' + (l.cls || "") + '"><td>' + l.h[0] + '</td><td class="ponto">' + l.h[1] + "</td><td>" + fmt(v.N) + "</td><td>" + fmt(v.V) + "</td><td>" + fmt(v.M) + "</td></tr>";
+    });
+    return s + '</table><p class="nota">Sentidos positivos: N de tração; V com a resultante das forças à esquerda da secção para cima; M a tracionar a fibra inferior. ' +
+      "Onde há uma força ou um momento concentrado, os valores vêm à esquerda (esq.) e à direita (dir.) da secção.</p></div>";
+  }
+
+  function painelResultados() {
+    var res = est.res, alvo = $("sep-resultados"), foco = document.activeElement && document.activeElement.id === "seccao-x";
+    if (foco) { atualizarSeccao(); return; }
+    var s = htmlClassificacao(res);
+    if (res.reacoes) s += htmlSeccao() + htmlReacoes(res) + htmlEquilibrio(res) + htmlMaximos(res) + htmlQuadro(res);
+    alvo.innerHTML = s;
+    var inp = $("seccao-x");
+    if (inp) {
+      inp.addEventListener("input", function () {
+        var x = lerNum(inp.value);
+        est.seccao = isFinite(x) && x >= 0 && x <= est.modelo.L ? x : null;
+        desenhar();
+        atualizarSeccao();
+      });
+      atualizarSeccao();
+    }
+  }
+
+  function painelElementos() {
+    var m = est.modelo, nomes = nomesApoios(), res = est.res, s = "";
+    s += '<div class="cartao grupo-el"><div class="cab"><h3>Viga</h3></div><div class="vazio">Comprimento L = ' + fmt(m.L) + " m (altera-se na barra de cima)</div></div>";
+    function grupoEl(k, titulo, itens) {
+      s += '<div class="cartao grupo-el"><div class="cab"><h3>' + titulo + '</h3><button class="mais" data-mais="' + k + '">+ acrescentar</button></div>';
+      if (!itens.length) s += '<div class="vazio">Nenhum.</div>';
+      itens.forEach(function (it) {
+        s += '<div class="item' + (eSel(k, it.id) ? " sel" : "") + '" data-item="' + k + '" data-id="' + it.id + '"><div class="desc">' + it.html +
+          '</div><button title="Editar" data-editar="' + k + '" data-id="' + it.id + '">✎</button><button title="Apagar" data-apagar="' + k + '" data-id="' + it.id + '">✕</button></div>';
+      });
+      s += "</div>";
+    }
+    grupoEl("apoios", "Apoios", m.apoios.slice().sort(function (a, b) { return a.x - b.x; }).map(function (a) {
+      return { id: a.id, html: "<b>" + esc(nomes[a.id] || "?") + "</b> · " + NOME_APOIO[a.tipo] + " · x = " + fmt(a.x) + " m" +
+        (a.tipo === "movel" && Math.abs(a.angulo || 0) > 1e-9 ? "<small>reação a " + fmtAng(a.angulo) + " da vertical</small>" : "") };
+    }));
+    grupoEl("rotulas", "Rótulas", m.rotulas.map(function (r) { return { id: r.id, html: "Rótula · x = " + fmt(r.x) + " m" }; }));
+    grupoEl("forcas", "Forças", m.forcas.map(function (f) {
+      var c = S.componentesForca(f);
+      return { id: f.id, html: "F = " + fmt(f.F) + " kN · x = " + fmt(f.x) + " m<small>" + esc(descreverDirecao(f.alfa)) +
+        " · F<sub>x</sub> = " + fmt(c.Fx) + ", F<sub>y</sub> = " + fmt(c.Fy) + " kN</small>" };
+    }));
+    grupoEl("momentos", "Momentos", m.momentos.map(function (q) {
+      return { id: q.id, html: "M = " + fmt(q.M) + " kN·m " + (q.sentido === "horario" ? "↻ horário" : "↺ anti-horário") + " · x = " + fmt(q.x) + " m" };
+    }));
+    grupoEl("distribuidas", "Cargas distribuídas", m.distribuidas.map(function (d) {
+      var R = S.resultanteDistribuida(d);
+      var sq = (Math.abs(d.q1) >= Math.abs(d.q2) ? d.q1 : d.q2) < 0 ? -1 : 1;
+      var q = (Math.abs(d.q1 - d.q2) < 1e-9 ? "q = " + fmt(d.q1 * sq) : "q = " + fmt(d.q1 * sq) + " a " + fmt(d.q2 * sq)) + " kN/m " + (sq > 0 ? "↓" : "↑");
+      return { id: d.id, html: q + " · de " + fmt(d.x1) + " a " + fmt(d.x2) + " m<small>resultante " + fmt(Math.abs(R.F)) + " kN " +
+        (R.F > 1e-9 ? "↓" : R.F < -1e-9 ? "↑" : "") + (R.x !== null ? " em x = " + fmt(R.x) + " m" : "") + "</small>" };
+    }));
+    $("sep-elementos").innerHTML = s;
+  }
+
+  function painel() {
+    if (!est.res) return;
+    painelResultados();
+    painelElementos();
+  }
+
+  // ------------------------------------------------------------ barra
+
+  var ICONES = {
+    selecionar: '<path d="M9 4 L9 21 L13.5 16.5 L17 23 L19.5 21.8 L16 15.5 L22 15.5 Z" fill="none" stroke="#12344F" stroke-width="1.6" stroke-linejoin="round"/>',
+    movel: '<line x1="2" y1="7" x2="28" y2="7" stroke="#12344F" stroke-width="2.5"/><polygon points="15,8 9,17 21,17" fill="none" stroke="#12344F" stroke-width="1.6"/><line x1="7" y1="21" x2="23" y2="21" stroke="#12344F" stroke-width="1.6"/>',
+    fixo: '<line x1="2" y1="7" x2="28" y2="7" stroke="#12344F" stroke-width="2.5"/><polygon points="15,8 9,18 21,18" fill="none" stroke="#12344F" stroke-width="1.6"/><line x1="7" y1="18" x2="23" y2="18" stroke="#12344F" stroke-width="1.6"/><line x1="9" y1="18" x2="6" y2="22" stroke="#12344F" stroke-width="1.1"/><line x1="13" y1="18" x2="10" y2="22" stroke="#12344F" stroke-width="1.1"/><line x1="17" y1="18" x2="14" y2="22" stroke="#12344F" stroke-width="1.1"/><line x1="21" y1="18" x2="18" y2="22" stroke="#12344F" stroke-width="1.1"/>',
+    encastramento: '<line x1="10" y1="3" x2="10" y2="23" stroke="#12344F" stroke-width="3"/><line x1="10" y1="13" x2="28" y2="13" stroke="#12344F" stroke-width="2.5"/><line x1="10" y1="5" x2="5" y2="10" stroke="#12344F" stroke-width="1.1"/><line x1="10" y1="10" x2="5" y2="15" stroke="#12344F" stroke-width="1.1"/><line x1="10" y1="15" x2="5" y2="20" stroke="#12344F" stroke-width="1.1"/><line x1="10" y1="20" x2="5" y2="25" stroke="#12344F" stroke-width="1.1"/>',
+    rotula: '<line x1="2" y1="13" x2="28" y2="13" stroke="#12344F" stroke-width="2.5"/><circle cx="15" cy="13" r="4.5" fill="#fff" stroke="#12344F" stroke-width="2"/>',
+    forca: '<line x1="15" y1="2" x2="15" y2="17" stroke="#C62828" stroke-width="2.2"/><polygon class="cheio" points="15,23 10.5,15 19.5,15" fill="#C62828"/>',
+    momento: '<path d="M8 19 A8 8 0 1 1 22 19" fill="none" stroke="#C62828" stroke-width="2"/><polygon class="cheio" points="22,23 18,16.5 25.5,17" fill="#C62828"/>',
+    distribuida: '<line x1="3" y1="5" x2="27" y2="5" stroke="#C62828" stroke-width="1.6"/><line x1="5" y1="5" x2="5" y2="17" stroke="#C62828" stroke-width="1.3"/><line x1="12" y1="5" x2="12" y2="17" stroke="#C62828" stroke-width="1.3"/><line x1="19" y1="5" x2="19" y2="17" stroke="#C62828" stroke-width="1.3"/><line x1="26" y1="5" x2="26" y2="17" stroke="#C62828" stroke-width="1.3"/><polygon class="cheio" points="5,21 2.5,16 7.5,16" fill="#C62828"/><polygon class="cheio" points="12,21 9.5,16 14.5,16" fill="#C62828"/><polygon class="cheio" points="19,21 16.5,16 21.5,16" fill="#C62828"/><polygon class="cheio" points="26,21 23.5,16 28.5,16" fill="#C62828"/>'
+  };
+  var FERRAMENTAS = [
+    ["selecionar", "Selecionar", "Selecionar, arrastar e editar (Esc)"],
+    ["movel", "Móvel", "Apoio móvel (1 reação)"],
+    ["fixo", "Fixo", "Apoio fixo (2 reações)"],
+    ["encastramento", "Encastram.", "Encastramento (3 reações)"],
+    ["rotula", "Rótula", "Rótula interior (M = 0)"],
+    ["forca", "Força", "Força concentrada"],
+    ["momento", "Momento", "Momento concentrado"],
+    ["distribuida", "Distribuída", "Carga distribuída: uniforme, triangular ou trapezoidal"]
+  ];
+
+  function construirBarra() {
+    $("ferramentas").innerHTML = FERRAMENTAS.map(function (f) {
+      return '<button class="ferramenta' + (f[0] === est.ferramenta ? " ativa" : "") + '" data-ferramenta="' + f[0] + '" title="' + esc(f[2]) +
+        '"><svg viewBox="0 0 30 26">' + ICONES[f[0]] + "</svg><span>" + f[1] + "</span></button>";
+    }).join("");
+    $("lista-exemplos").innerHTML = EXEMPLOS.map(function (e) {
+      return '<button data-exemplo="' + e.chave + '">' + esc(e.nome) + "<small>" + esc(e.desc) + "</small></button>";
+    }).join("");
+  }
+
+  function escolherFerramenta(f) {
+    est.ferramenta = f;
+    Array.prototype.forEach.call(document.querySelectorAll(".ferramenta"), function (b) {
+      b.classList.toggle("ativa", b.getAttribute("data-ferramenta") === f);
+    });
+    $("area-desenho").style.cursor = f === "selecionar" ? "default" : "crosshair";
+    mostrarEstado(dica());
+  }
+
+  function atualizarBotoes() {
+    document.querySelector('[data-acao="desfazer"]').disabled = !est.hist.length;
+    document.querySelector('[data-acao="refazer"]').disabled = !est.fut.length;
+  }
+
+  function descarregar(blob, nome) {
+    var url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = nome;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1500);
+  }
+
+  function guardarFicheiro() {
+    var dados = { formato: "diagramas-de-esforcos", versao: 1, modelo: semIds(est.modelo) };
+    descarregar(new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" }), "viga.json");
+  }
+
+  function abrirFicheiro(ficheiro) {
+    var leitor = new FileReader();
+    leitor.onload = function () {
+      try {
+        var dados = JSON.parse(leitor.result), mod = dados.modelo || dados;
+        if (!mod || typeof mod !== "object" || !(lerNum(mod.L) > 0)) throw new Error("sem comprimento");
+        TIPOS.forEach(function (k) { if (mod[k] !== undefined && !Array.isArray(mod[k])) throw new Error(k); });
+        carregarModelo(mod, true);
+        mostrarEstado("Viga aberta de <b>" + esc(ficheiro.name) + "</b>.");
+      } catch (e) {
+        aviso("O ficheiro não é uma viga guardada por este programa.");
+      }
+    };
+    leitor.readAsText(ficheiro);
+  }
+
+  function exportarImagem() {
+    var g = est.geo, svg = construirSvg(g, est.res, true), img = new Image();
+    img.onload = function () {
+      var k = 2, c = document.createElement("canvas");
+      c.width = g.W * k; c.height = g.H * k;
+      var ctx = c.getContext("2d");
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(function (b) { if (b) descarregar(b, "diagramas.png"); else aviso("Este browser não deixou criar a imagem."); }, "image/png");
+    };
+    img.onerror = function () { aviso("Este browser não deixou criar a imagem."); };
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  }
+
+  function ligarEventos() {
+    var area = $("area-desenho");
+    area.addEventListener("pointerdown", aoPremir);
+    area.addEventListener("pointermove", aoMover);
+    area.addEventListener("pointerup", aoLargar);
+    area.addEventListener("pointercancel", aoLargar);
+    area.addEventListener("pointerleave", function () { if (!est.arrasto) esconderCursor(); });
+    area.addEventListener("contextmenu", aoMenuContexto);
+
+    $("ferramentas").addEventListener("click", function (ev) {
+      var b = ev.target.closest("[data-ferramenta]");
+      if (b) escolherFerramenta(b.getAttribute("data-ferramenta"));
+    });
+    $("comprimento").addEventListener("change", function () { mudarComprimento(this.value); });
+    $("comprimento").addEventListener("keydown", function (ev) { if (ev.key === "Enter") { ev.preventDefault(); this.blur(); } });
+    $("grelha").addEventListener("change", function () { est.grelha = parseFloat(this.value) || 0; guardarLocal(); });
+    $("mostrar-valores").addEventListener("change", function () { est.valores = this.checked; guardarLocal(); desenhar(); });
+
+    document.querySelector(".barra").addEventListener("click", function (ev) {
+      var b = ev.target.closest("[data-acao]");
+      var lista = $("lista-exemplos");
+      if (ev.target.closest("[data-exemplo]")) {
+        var ch = ev.target.closest("[data-exemplo]").getAttribute("data-exemplo");
+        var ex = EXEMPLOS.filter(function (e) { return e.chave === ch; })[0];
+        lista.hidden = true;
+        if (ex) { carregarModelo(ex.modelo, true); mostrarEstado("Exemplo: <b>" + esc(ex.nome) + "</b>. Ctrl+Z volta à viga anterior."); }
+        return;
+      }
+      if (!b) return;
+      var acao = b.getAttribute("data-acao");
+      if (acao === "exemplos") { lista.hidden = !lista.hidden; return; }
+      lista.hidden = true;
+      if (acao === "desfazer") desfazer();
+      else if (acao === "refazer") refazer();
+      else if (acao === "limpar") { alterar(function (m) { var L = m.L; TIPOS.forEach(function (k) { m[k] = []; }); m.L = L; }); est.sel = null; est.seccao = null; atualizar(); mostrarEstado("Viga limpa. Ctrl+Z desfaz."); }
+      else if (acao === "abrir") $("ficheiro").click();
+      else if (acao === "guardar") guardarFicheiro();
+      else if (acao === "imagem") exportarImagem();
+      else if (acao === "imprimir") window.print();
+    });
+    document.querySelector('[data-acao="ajuda"]').addEventListener("click", dialogoAjuda);
+    document.addEventListener("click", function (ev) {
+      if (!ev.target.closest(".menu")) $("lista-exemplos").hidden = true;
+    });
+    $("ficheiro").addEventListener("change", function () {
+      if (this.files && this.files[0]) abrirFicheiro(this.files[0]);
+      this.value = "";
+    });
+
+    document.querySelector(".separadores").addEventListener("click", function (ev) {
+      var b = ev.target.closest("[data-sep]");
+      if (!b) return;
+      var sep = b.getAttribute("data-sep");
+      Array.prototype.forEach.call(document.querySelectorAll(".separador"), function (x) { x.classList.toggle("ativo", x === b); });
+      $("sep-resultados").hidden = sep !== "resultados";
+      $("sep-elementos").hidden = sep !== "elementos";
+    });
+
+    $("sep-elementos").addEventListener("click", function (ev) {
+      var t = ev.target.closest("button");
+      if (t && t.getAttribute("data-mais")) { acrescentar(t.getAttribute("data-mais")); return; }
+      if (t && t.getAttribute("data-editar")) { editar(t.getAttribute("data-editar"), +t.getAttribute("data-id")); return; }
+      if (t && t.getAttribute("data-apagar")) { apagar(t.getAttribute("data-apagar"), +t.getAttribute("data-id")); return; }
+      var it = ev.target.closest("[data-item]");
+      if (it) { est.sel = { k: it.getAttribute("data-item"), id: +it.getAttribute("data-id") }; desenhar(); painelElementos(); }
+    });
+    $("sep-elementos").addEventListener("dblclick", function (ev) {
+      var it = ev.target.closest("[data-item]");
+      if (it) editar(it.getAttribute("data-item"), +it.getAttribute("data-id"));
+    });
+
+    $("fundo-dialogo").addEventListener("pointerdown", function (ev) { if (ev.target === this) fecharDialogo(); });
+
+    document.addEventListener("keydown", function (ev) {
+      var tag = ev.target && ev.target.tagName, emCampo = tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA";
+      if (ev.key === "Escape") {
+        if (est.dialogo) { fecharDialogo(); return; }
+        $("lista-exemplos").hidden = true;
+        est.sel = null; est.seccao = null;
+        escolherFerramenta("selecionar");
+        desenhar(); painel();
+        return;
+      }
+      if (est.dialogo || emCampo) return;
+      var mod = ev.ctrlKey || ev.metaKey;
+      if (mod && (ev.key === "z" || ev.key === "Z") && !ev.shiftKey) { ev.preventDefault(); desfazer(); }
+      else if (mod && (ev.key === "y" || ev.key === "Y" || ((ev.key === "z" || ev.key === "Z") && ev.shiftKey))) { ev.preventDefault(); refazer(); }
+      else if ((ev.key === "Delete" || ev.key === "Backspace") && est.sel) { ev.preventDefault(); apagar(est.sel.k, est.sel.id); }
+      else if (ev.key === "ArrowLeft" && est.sel) { ev.preventDefault(); moverSelecionado(-1); }
+      else if (ev.key === "ArrowRight" && est.sel) { ev.preventDefault(); moverSelecionado(1); }
+    });
+
+    var tempo = null;
+    window.addEventListener("resize", function () {
+      clearTimeout(tempo);
+      tempo = setTimeout(function () { desenhar(); }, 80);
+    });
+  }
+
+  function iniciar() {
+    construirBarra();
+    ligarEventos();
+    var hash = (location.hash || "").replace("#", "");
+    var ex = /exemplo=([a-z]+)/.exec(hash), guardado = lerLocal();
+    var exemplo = ex ? EXEMPLOS.filter(function (e) { return e.chave === ex[1]; })[0] : null;
+    if (guardado) {
+      if (typeof guardado.grelha === "number") est.grelha = guardado.grelha;
+      if (typeof guardado.valores === "boolean") est.valores = guardado.valores;
+    }
+    if (exemplo) est.modelo = comIds(exemplo.modelo);
+    else if (hash === "vazio") est.modelo = comIds(vazio(6));
+    else if (guardado && guardado.modelo && lerNum(guardado.modelo.L) > 0) est.modelo = comIds(guardado.modelo);
+    else est.modelo = comIds(EXEMPLOS[0].modelo);
+    $("comprimento").value = fmt(est.modelo.L);
+    $("grelha").value = String(est.grelha);
+    if ($("grelha").value === "") { est.grelha = 0.1; $("grelha").value = "0.1"; }
+    $("mostrar-valores").checked = est.valores;
+    escolherFerramenta("selecionar");
+    atualizar();
+  }
+
+  // para os testes da interface
+  window.Diagramas = {
+    estado: est,
+    carregar: function (mod) { carregarModelo(mod, true); },
+    modelo: function () { return semIds(est.modelo); }
+  };
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar);
+  else iniciar();
+})();
+
+</script>
+</body>
+</html>
